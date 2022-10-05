@@ -352,5 +352,6 @@ contract FlightSuretyData {
                                 address voter,
                                 address nominee
                             )
+                            external
                             returns(bool, uint256);
 }
