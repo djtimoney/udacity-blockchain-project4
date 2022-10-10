@@ -353,5 +353,5 @@ contract FlightSuretyData {
                                 address nominee
                             )
                             external
-                            returns(bool, uint256);
+                            returns (bool, uint256);
 }

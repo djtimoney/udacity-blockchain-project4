@@ -214,10 +214,13 @@ contract FlightSuretyData {
                             requireValidCaller
                             payable
     {
-        Policy policy = new Policy();
-        policy.insuree = insuree;
-        policy.price = price;
-        policies[flightKey].push(policy);
+        policies[flightKey].push(
+            Policy(
+                {
+                    insuree: insuree,
+                    price: price
+                }
+        ));
     }
 
     /**
