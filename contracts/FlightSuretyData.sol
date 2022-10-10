@@ -20,11 +20,28 @@ contract FlightSuretyData {
         mapping(address => uint256) voters;
         bool approved;
         bool canParticipate;
+        uint256 funding;
     }
+
 
     mapping(address => Airline) private airlines;
 
+    struct Policy {
+        address insuree;
+        uint256 price;
+    }
+
+    // Map flight key -> list of policies for this flight
+    mapping(bytes32 => Policy[]) private policies;
+
+    // Map passenger address -> unclaimed payout balance
+    mapping(address => uint256) private payouts;
+
     uint256 numAirlines = 0;
+
+    uint256 fundBalance = 0;
+
+    uint256 constant buyInAmount  = 10 ether;
 
     
 
@@ -120,6 +137,14 @@ contract FlightSuretyData {
         return operational;
     }
 
+    /**
+    * @dev Is airline valid participant?
+    * @return A bool that is true if airline is approved and has provided necessary funds
+    */
+    function isAirline(address airline) public view returns(bool) {
+        return(airlines[airline].canParticipate);
+    }
+
 
     /**
     * @dev Sets contract operations on/off
@@ -180,12 +205,19 @@ contract FlightSuretyData {
     *
     */   
     function buy
-                            (                             
+                            (     
+                                bytes32 flightKey,
+                                address insuree,
+                                uint256 price
                             )
                             external
+                            requireValidCaller
                             payable
     {
-
+        Policy policy = new Policy();
+        policy.insuree = insuree;
+        policy.price = price;
+        policies[flightKey].push(policy);
     }
 
     /**
@@ -193,10 +225,17 @@ contract FlightSuretyData {
     */
     function creditInsurees
                                 (
+                                    bytes32 flightKey
                                 )
                                 external
-                                pure
+                                requireValidCaller
     {
+        uint numPolicies = policies[flightKey].length;
+        for (uint i = 0 ; i < numPolicies ; i++) {
+            // Credit insuree 1.5 times price they paid.  Since we are using integers, multiply by
+            // 3 then divide by 2 to calculate 1.5 x
+            payouts[policies[flightKey][i].insuree].add(policies[flightKey][i].price.mul(3).div(2));
+        }
     }
     
 
@@ -223,6 +262,12 @@ contract FlightSuretyData {
                             public
                             payable
     {
+        airlines[msg.sender].funding.add(msg.value);
+        fundBalance.add(msg.value);
+
+        if (airlines[msg.sender].funding >= buyInAmount) {
+            airlines[msg.sender].canParticipate = true;
+        }
     }
 
     function getFlightKey
