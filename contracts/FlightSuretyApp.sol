@@ -127,11 +127,20 @@ contract FlightSuretyApp {
     */  
     function registerFlight
                                 (
+                                    string flight,
+                                    uint32 timestamp
                                 )
                                 external
-                                pure
     {
-
+        bytes32 flightKey = getFlightKey(msg.sender, flight, timestamp);
+        flights[flightKey] = Flight(
+                        {
+                            isRegistered: true,
+                            statusCode: STATUS_CODE_UNKNOWN,
+                            updatedTimestamp: timestamp,
+                            airline: msg.sender
+                        }
+        );
     }
     
    /**
@@ -146,8 +155,15 @@ contract FlightSuretyApp {
                                     uint8 statusCode
                                 )
                                 internal
-                                pure
     {
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        flights[flightKey].statusCode = statusCode;
+        if (statusCode >= STATUS_CODE_ON_TIME) {
+            flights[flightKey].updatedTimestamp = now;
+        }
+        if (statusCode == STATUS_CODE_LATE_AIRLINE) {
+            flightSuretyData.creditInsurees(flightKey);
+        }
     }
 
 
@@ -354,4 +370,19 @@ contract FlightSuretyData {
                             )
                             external
                             returns (bool, uint256);
+
+        function buy
+                            (     
+                                bytes32 flightKey,
+                                address insuree,
+                                uint256 price
+                            )
+                            external
+                            payable;
+
+        function creditInsurees
+                            (
+                                bytes32 flightKey
+                            )
+                            external;
 }
