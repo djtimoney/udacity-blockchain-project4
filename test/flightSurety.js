@@ -1,6 +1,7 @@
 
 var Test = require('../config/testConfig.js');
 var BigNumber = require('bignumber.js');
+const Web3 = require('web3');
 
 contract('Flight Surety Tests', async (accounts) => {
 
@@ -81,12 +82,41 @@ contract('Flight Surety Tests', async (accounts) => {
         await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
     }
     catch(e) {
-
+        console.log(e);
     }
     let result = await config.flightSuretyData.isAirline.call(newAirline); 
 
     // ASSERT
-    assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
+    assert.equal(result, false, "Airline should  be able to register another airline if it has provided funding");
+
+  });
+
+  it('(airline) can register an Airline using registerAirline() after it is funded', async () => {
+    
+    // ARRANGE
+    let newAirline = accounts[2];
+
+    // ACT
+    try {
+        await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
+    }
+    catch(e) {
+        console.log(e);
+    }
+    try {
+        await Web3.eth.sendTransaction({
+            from: newAirline,
+            to: config.flightSuretyData.address,
+            value: Web3.utils.toWei('10', 'ether')
+        });
+    }
+    catch(e) {
+        console.log(e);
+    }
+    let result = await config.flightSuretyData.isAirline.call(newAirline); 
+
+    // ASSERT
+    assert.equal(result, true, "Airline should be able to register another airline if it has provided funding");
 
   });
  

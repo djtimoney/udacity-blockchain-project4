@@ -48,7 +48,8 @@ contract FlightSuretyData {
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
-
+    event AirlineRegistered(address airline, bool approved);
+    event ReceivedFunds(address airline, uint256 amount);
 
     /**
     * @dev Constructor
@@ -179,8 +180,8 @@ contract FlightSuretyData {
                             requireValidCaller
                             returns (bool success, uint256 votes)
     {
-        require(airlines[nominee].approved == false, "Airline already registered");
-        require(airlines[nominee].voters[voter] == 0, "Duplicate vote for this airline");
+        require((airlines[nominee].approved == false), "Airline already registered");
+        require((airlines[nominee].voters[voter] == 0), "Duplicate vote for this airline");
         // See if this is first registration for this airline
         if (airlines[nominee].airlineAddress == nominee) {
             // Airline already in queue.  Must need a multivote.
@@ -196,6 +197,7 @@ contract FlightSuretyData {
             airlines[nominee].voters[voter] = 1;
             airlines[nominee].approved = (numAirlines < 5);
         }
+        emit AirlineRegistered(nominee, airlines[nominee].approved);
         return(airlines[nominee].approved, airlines[nominee].numVotes);
     }
 
