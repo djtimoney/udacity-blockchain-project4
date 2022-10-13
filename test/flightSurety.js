@@ -108,7 +108,7 @@ contract('Flight Surety Tests', async (accounts) => {
     try {
         await web3.eth.sendTransaction({
             from: newAirline,
-            to: config.flightSuretyData.address,
+            to: config.flightSuretyApp.address,
             value: Web3.utils.toWei('10', 'ether')
         });
     }

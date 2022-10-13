@@ -26,10 +26,23 @@ contract FlightSuretyData {
 
     mapping(address => Airline) private airlines;
 
+    struct Flight {
+        bool isRegistered;
+        uint8 statusCode;
+        uint256 updatedTimestamp;        
+        address airline;
+    }
+    mapping(bytes32 => Flight) private flights;
+
+    bytes32[] flightKeys;
+
     struct Policy {
         address insuree;
         uint256 price;
     }
+
+    // Map registered flight keys to true
+    mapping(bytes32 => bool) private registeredFlights;
 
     // Map flight key -> list of policies for this flight
     mapping(bytes32 => Policy[]) private policies;
@@ -59,7 +72,7 @@ contract FlightSuretyData {
     constructor
                                 (
                                 ) 
-                                public 
+                                public
     {
         contractOwner = msg.sender;
     }
@@ -149,6 +162,35 @@ contract FlightSuretyData {
 
 
     /**
+    * @dev Is this a registered flight?
+    * @return A bool that is true if flight is registered and occurs in the future
+    */
+    function isFlight(
+                        address airline, 
+                        string flight,
+                        uint256 timestamp
+                    )
+                    public
+                    view
+                    returns(bool)
+    {
+        return(registeredFlights[getFlightKey(airline, flight, timestamp)]);
+    }
+
+    function hasPayout
+                        (
+                            address insuree
+                        )
+                        external
+                        view
+                        requireValidCaller
+                        returns(bool)
+    {
+        return(payouts[insuree] > 0);
+    }
+
+
+    /**
     * @dev Sets contract operations on/off
     *
     * When operational mode is disabled, all write transactions except for this one will fail
@@ -205,30 +247,49 @@ contract FlightSuretyData {
         return(airlines[nominee].approved, airlines[nominee].numVotes);
     }
 
+       /**
+    * @dev Register a future flight for insuring.
+    *
+    */  
+    function registerFlight
+                                (
+                                    bytes32 flightKey
+                                )
+                                external
+                                requireIsOperational 
+                                requireValidCaller
+    {
+        registeredFlights[flightKey] = true;
+    }
+    
+
 
    /**
-    * @dev Buy insurance for a flight
+    * @dev Record purchased policy
     *
     */   
-    function buy
+    function recordPolicy
                             (     
-                                bytes32 flightKey,
-                                address insuree
+                                address airline,
+                                string flight,
+                                uint256 timestamp,
+                                address insuree,
+                                uint256 amount
                             )
                             external
                             requireValidCaller
-                            requireIsOperational
-                            payable
+                            requireIsOperational 
     {
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
         policies[flightKey].push(
             Policy(
                 {
                     insuree: insuree,
-                    price: msg.value
+                    price: amount
                 }
         ));
-        fundBalance = fundBalance.add(msg.value);
-        emit PolicyPurchased(flightKey, insuree, msg.value);
+        fundBalance = fundBalance.add(amount);
+        emit PolicyPurchased(flightKey, insuree, amount);
     }
 
     /**
@@ -263,18 +324,15 @@ contract FlightSuretyData {
                             external
                             requireIsOperational
                             requireValidCaller
+                            returns (uint256)
     {
-        // Check
         require (payouts[insuree] > 0, "No funds to claim");
         require (fundBalance >= payouts[insuree], "Insufficient funds available");
 
-        // Effect
         uint256 payoutDue = payouts[insuree];
         payouts[insuree] = 0;
         fundBalance = fundBalance.sub(payoutDue);
-
-        // Interaction
-        insuree.transfer(payoutDue);
+        return (payoutDue);
 
     }
 
@@ -283,18 +341,23 @@ contract FlightSuretyData {
     *      resulting in insurance payouts, the contract should be self-sustaining
     *
     */   
-    function fund
-                            (   
+    function recordAirlineFunding
+                            ( 
+                                address airline,
+                                uint256 amount  
                             )
                             public
-                            payable
+                            requireValidCaller
+                            returns(bool)
     {
-        airlines[msg.sender].funding = airlines[msg.sender].funding.add(msg.value);
-        fundBalance = fundBalance.add(msg.value);
+        require(amount > 0, "Invalid funding amount");
+        airlines[airline].funding = airlines[airline].funding.add(amount);
+        fundBalance = fundBalance.add(amount);
 
-        if (airlines[msg.sender].funding >= buyInAmount) {
-            airlines[msg.sender].canParticipate = true;
+        if (airlines[airline].funding >= buyInAmount) {
+            airlines[airline].canParticipate = true;
         }
+        return(airlines[airline].canParticipate);
     }
 
     function getFlightKey
@@ -304,22 +367,13 @@ contract FlightSuretyData {
                             uint256 timestamp
                         )
                         pure
-                        internal
+                        public
                         returns(bytes32) 
     {
         return keccak256(abi.encodePacked(airline, flight, timestamp));
     }
 
-    /**
-    * @dev Fallback function for funding smart contract.
-    *
-    */
-    function() 
-                            external 
-                            payable 
-    {
-        fund();
-    }
+
 
 
 }

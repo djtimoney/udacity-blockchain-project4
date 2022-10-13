@@ -69,6 +69,15 @@ contract FlightSuretyApp {
         _;
     }
 
+        /**
+    * @dev Modifier that requires the function caller be a FlifghtSurety registered airline
+    */
+    modifier requireAirline()
+    {
+        require(flightSuretyData.isAirline(msg.sender), "Caller is a FlightSurety-registered airline");
+        _;
+    }
+
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
     /********************************************************************************************/
@@ -123,6 +132,57 @@ contract FlightSuretyApp {
         return flightSuretyData.registerAirline(msg.sender, nominee);
     }
 
+    /**
+    * @dev Initial funding for the insurance. Unless there are too many delayed flights
+    *      resulting in insurance payouts, the contract should be self-sustaining
+    *
+    */   
+    function fund
+                            (   
+                            )
+                            public
+                            payable
+    {
+        require(msg.value > 0, "value must be greater than zero");
+        flightSuretyData.recordAirlineFunding(msg.sender, msg.value);
+    }
+
+
+    /**
+     * @dev Claim funds
+     */
+     function pay
+                (
+
+                )
+                external
+                payable
+     {
+        require (flightSuretyData.hasPayout(msg.sender), "No payout due");
+        
+        uint256 payout = flightSuretyData.pay(msg.sender);
+
+        msg.sender.transfer(payout);
+     }
+
+     /**
+      * @dev Buy a policy
+      */
+     function buy
+                (
+                    address airline,
+                    string flight,
+                    uint256 timestamp
+                )
+                external
+                payable
+    {
+        require (msg.value > 0, "This function requires funds");
+        require (timestamp > now, "Flight must occur in the future");
+        require (flightSuretyData.isFlight(airline, flight, timestamp), "Flight not eligible for FlightSurety");
+
+        flightSuretyData.recordPolicy(airline, flight, timestamp, msg.sender, msg.value);
+    }
 
    /**
     * @dev Register a future flight for insuring.
@@ -131,11 +191,14 @@ contract FlightSuretyApp {
     function registerFlight
                                 (
                                     string flight,
-                                    uint32 timestamp
+                                    uint256 timestamp
                                 )
                                 external
+                                requireAirline
     {
-        bytes32 flightKey = getFlightKey(msg.sender, flight, timestamp);
+        require(timestamp > now, "Only future flights can be registered");
+
+        bytes32 flightKey = flightSuretyData.getFlightKey(msg.sender, flight, timestamp);
         flightKeys.push(flightKey);
         flights[flightKey] = Flight(
                         {
@@ -145,6 +208,8 @@ contract FlightSuretyApp {
                             airline: msg.sender
                         }
         );
+
+        flightSuretyData.registerFlight(flightKey);
     }
     
    /**
@@ -160,7 +225,7 @@ contract FlightSuretyApp {
                                 )
                                 internal
     {
-        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        bytes32 flightKey = flightSuretyData.getFlightKey(airline, flight, timestamp);
         flights[flightKey].statusCode = statusCode;
         if (statusCode >= STATUS_CODE_ON_TIME) {
             flights[flightKey].updatedTimestamp = now;
@@ -364,6 +429,17 @@ contract FlightSuretyApp {
 
 // endregion
 
+    /**
+    * @dev Fallback function for funding smart contract.
+    *
+    */
+    function() 
+                            external 
+                            payable 
+    {
+        fund();
+    }
+
 }   
 
 contract FlightSuretyData {
@@ -381,24 +457,77 @@ contract FlightSuretyData {
                             external
                             returns (bool, uint256);
 
-        function buy
-                            (     
-                                bytes32 flightKey,
-                                address insuree
+        function registerFlight
+                                (
+                                    bytes32 flightKey
+                                )
+                                external;
+
+        function recordAirlineFunding
+                            (
+                                address airline,
+                                uint256 amount
                             )
                             external
-                            payable;
+                            returns (bool);
+
+        function recordPolicy
+                            (     
+                                address airline,
+                                string flight,
+                                uint256 timestamp,
+                                address insuree,
+                                uint256 amount
+                            )
+                            external;
         
         function pay
                             (
                                 address insuree
                             )
                             external
-                            payable;
+                            returns(uint256);
 
         function creditInsurees
                             (
                                 bytes32 flightKey
                             )
                             external;
+
+        function getFlightKey
+                        (
+                            address airline,
+                            string memory flight,
+                            uint256 timestamp
+                        )
+                        pure
+                        public
+                        returns(bytes32); 
+
+        function isAirline 
+                        (
+                            address airline
+                        )
+                        public
+                        view
+                        returns(bool);
+
+        
+        function isFlight
+                        (
+                            address airline,
+                            string flight,
+                            uint256 timestamp
+                        )
+                        public
+                        view
+                        returns (bool);
+
+        function hasPayout
+                        (
+                            address insuree
+                        )
+                        external
+                        view
+                        returns(bool);
 }
