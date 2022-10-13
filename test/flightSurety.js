@@ -97,14 +97,16 @@ contract('Flight Surety Tests', async (accounts) => {
     let newAirline = accounts[2];
 
     // ACT
+    // Probably not needed, since previous test registered this airline, but
+    // good practice to make tests independent. This will probably throw
+    // an exception due to 'require' in the registerAirline, so catch and ignore it
     try {
         await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
     }
     catch(e) {
-        console.log(e);
     }
     try {
-        await Web3.eth.sendTransaction({
+        await web3.eth.sendTransaction({
             from: newAirline,
             to: config.flightSuretyData.address,
             value: Web3.utils.toWei('10', 'ether')

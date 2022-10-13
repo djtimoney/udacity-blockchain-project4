@@ -38,6 +38,8 @@ contract FlightSuretyApp {
     }
     mapping(bytes32 => Flight) private flights;
 
+    bytes32[] flightKeys;
+
  
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -99,6 +101,7 @@ contract FlightSuretyApp {
                             requireContractOwner
     {
         isOperational = operational;
+        flightSuretyData.setOperatingStatus(operational);
     }
 
     /********************************************************************************************/
@@ -133,6 +136,7 @@ contract FlightSuretyApp {
                                 external
     {
         bytes32 flightKey = getFlightKey(msg.sender, flight, timestamp);
+        flightKeys.push(flightKey);
         flights[flightKey] = Flight(
                         {
                             isRegistered: true,
@@ -363,6 +367,12 @@ contract FlightSuretyApp {
 }   
 
 contract FlightSuretyData {
+        function setOperatingStatus
+                            (
+                                bool mode
+                            )
+                            external;
+
         function registerAirline
                             (   
                                 address voter,
@@ -374,8 +384,14 @@ contract FlightSuretyData {
         function buy
                             (     
                                 bytes32 flightKey,
-                                address insuree,
-                                uint256 price
+                                address insuree
+                            )
+                            external
+                            payable;
+        
+        function pay
+                            (
+                                address insuree
                             )
                             external
                             payable;

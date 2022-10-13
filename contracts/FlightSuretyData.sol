@@ -17,7 +17,7 @@ contract FlightSuretyData {
     struct Airline {
         address airlineAddress;
         uint256 numVotes;
-        mapping(address => uint256) voters;
+        mapping(address => bool) voters;
         bool approved;
         bool canParticipate;
         uint256 funding;
@@ -49,7 +49,8 @@ contract FlightSuretyData {
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
     event AirlineRegistered(address airline, bool approved);
-    event ReceivedFunds(address airline, uint256 amount);
+    event PolicyPurchased(bytes32 flightKey, address insuree, uint256 price);
+    event PolicyPaidOut(bytes32 flightKey, address insuree, uint256 payoutAmount);
 
     /**
     * @dev Constructor
@@ -178,24 +179,27 @@ contract FlightSuretyData {
                             )
                             external
                             requireValidCaller
+                            requireIsOperational
                             returns (bool success, uint256 votes)
     {
         require((airlines[nominee].approved == false), "Airline already registered");
-        require((airlines[nominee].voters[voter] == 0), "Duplicate vote for this airline");
+        require((airlines[nominee].voters[voter] == false), "Duplicate vote for this airline");
+        airlines[nominee].voters[voter] = true;
+        airlines[nominee].numVotes = airlines[nominee].numVotes.add(1);
         // See if this is first registration for this airline
         if (airlines[nominee].airlineAddress == nominee) {
             // Airline already in queue.  Must need a multivote.
-            airlines[nominee].voters[voter] = 1;
-            airlines[nominee].numVotes.add(1);
             if (airlines[nominee].numVotes >= numAirlines.div(2)) {
                 airlines[nominee].approved = true;
             }
         } else {
-            // Airline not yet in queue. Add it
+            // Airline not yet in queue. Add it and approve if
+            // fewer than 5 airlines are registered
             airlines[nominee].airlineAddress = nominee;
-            airlines[nominee].numVotes = 1;
-            airlines[nominee].voters[voter] = 1;
             airlines[nominee].approved = (numAirlines < 5);
+        }
+        if (airlines[nominee].approved) {
+            numAirlines = numAirlines.add(1);
         }
         emit AirlineRegistered(nominee, airlines[nominee].approved);
         return(airlines[nominee].approved, airlines[nominee].numVotes);
@@ -209,20 +213,22 @@ contract FlightSuretyData {
     function buy
                             (     
                                 bytes32 flightKey,
-                                address insuree,
-                                uint256 price
+                                address insuree
                             )
                             external
                             requireValidCaller
+                            requireIsOperational
                             payable
     {
         policies[flightKey].push(
             Policy(
                 {
                     insuree: insuree,
-                    price: price
+                    price: msg.value
                 }
         ));
+        fundBalance = fundBalance.add(msg.value);
+        emit PolicyPurchased(flightKey, insuree, msg.value);
     }
 
     /**
@@ -234,12 +240,14 @@ contract FlightSuretyData {
                                 )
                                 external
                                 requireValidCaller
+                                requireIsOperational
     {
         uint numPolicies = policies[flightKey].length;
         for (uint i = 0 ; i < numPolicies ; i++) {
             // Credit insuree 1.5 times price they paid.  Since we are using integers, multiply by
             // 3 then divide by 2 to calculate 1.5 x
-            payouts[policies[flightKey][i].insuree].add(policies[flightKey][i].price.mul(3).div(2));
+            payouts[policies[flightKey][i].insuree] = payouts[policies[flightKey][i].insuree].add(policies[flightKey][i].price.mul(3).div(2));
+            emit PolicyPaidOut(flightKey, policies[flightKey][i].insuree, payouts[policies[flightKey][i].insuree]);
         }
     }
     
@@ -250,10 +258,24 @@ contract FlightSuretyData {
     */
     function pay
                             (
+                                address insuree
                             )
                             external
-                            pure
+                            requireIsOperational
+                            requireValidCaller
     {
+        // Check
+        require (payouts[insuree] > 0, "No funds to claim");
+        require (fundBalance >= payouts[insuree], "Insufficient funds available");
+
+        // Effect
+        uint256 payoutDue = payouts[insuree];
+        payouts[insuree] = 0;
+        fundBalance = fundBalance.sub(payoutDue);
+
+        // Interaction
+        insuree.transfer(payoutDue);
+
     }
 
    /**
@@ -267,8 +289,8 @@ contract FlightSuretyData {
                             public
                             payable
     {
-        airlines[msg.sender].funding.add(msg.value);
-        fundBalance.add(msg.value);
+        airlines[msg.sender].funding = airlines[msg.sender].funding.add(msg.value);
+        fundBalance = fundBalance.add(msg.value);
 
         if (airlines[msg.sender].funding >= buyInAmount) {
             airlines[msg.sender].canParticipate = true;
