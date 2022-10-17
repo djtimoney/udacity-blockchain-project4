@@ -11,25 +11,28 @@ contract('Flight Surety Tests', async (accounts) => {
     await config.flightSuretyData.authorizeCaller(config.flightSuretyApp.address);
   });
 
+
+
+
   /****************************************************************************************/
   /* Operations and Settings                                                              */
   /****************************************************************************************/
 
-  it(`(multiparty) has correct initial isOperational() value`, async function () {
+  it(`(operational status control) has correct initial isOperational() value`, async function () {
 
     // Get operating status
-    let status = await config.flightSuretyData.isOperational.call();
+    let status =  await config.flightSuretyApp.isOperational();
     assert.equal(status, true, "Incorrect initial operating status value");
 
   });
 
-  it(`(multiparty) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
+  it(`(operational status control) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
 
       // Ensure that access is denied for non-Contract Owner account
       let accessDenied = false;
       try 
       {
-          await config.flightSuretyData.setOperatingStatus(false, { from: config.testAddresses[2] });
+          await config.flightSuretyApp.setOperatingStatus(false, { from: config.testAddresses[2] });
       }
       catch(e) {
           accessDenied = true;
@@ -38,29 +41,37 @@ contract('Flight Surety Tests', async (accounts) => {
             
   });
 
-  it(`(multiparty) can allow access to setOperatingStatus() for Contract Owner account`, async function () {
+  it(`(operational status control can allow access to setOperatingStatus() for Contract Owner account`, async function () {
 
       // Ensure that access is allowed for Contract Owner account
       let accessDenied = false;
+      
       try 
       {
-          await config.flightSuretyData.setOperatingStatus(false);
+          await config.flightSuretyApp.setOperatingStatus(false, {from: config.owner});
       }
       catch(e) {
           accessDenied = true;
       }
-      assert.equal(accessDenied, false, "Access not restricted to Contract Owner");
+      assert.equal(accessDenied, false, "Access not allowed for Contract Owner");
       
   });
 
-  it(`(multiparty) can block access to functions using requireIsOperational when operating status is false`, async function () {
+  it(`(operational status control) can block access to functions using requireIsOperational when operating status is false`, async function () {
 
-      await config.flightSuretyData.setOperatingStatus(false);
+      try
+      {
+        await config.flightSuretyApp.setOperatingStatus(false, {from: config.owner});
+      }
+      catch(e) {
+        console.log("Cannot set operating status");
+        console.log(e);
+      }
 
       let reverted = false;
       try 
       {
-          await config.flightSurety.setTestingMode(true);
+        await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
       }
       catch(e) {
           reverted = true;
@@ -68,7 +79,15 @@ contract('Flight Surety Tests', async (accounts) => {
       assert.equal(reverted, true, "Access not blocked for requireIsOperational");      
 
       // Set it back for other tests to work
-      await config.flightSuretyData.setOperatingStatus(true);
+      await config.flightSuretyApp.setOperatingStatus(true, {from: config.owner});
+
+  });
+
+  it(`(airline) first airline is registered by contract initialization`, async function () {
+
+    let registered = await config.flightSuretyData.isRegistered(config.owner);
+
+    assert.equal(registered, true, "First airline should be registered");
 
   });
 
@@ -76,18 +95,20 @@ contract('Flight Surety Tests', async (accounts) => {
     
     // ARRANGE
     let newAirline = accounts[2];
+    let registerSucceeded = true;
 
     // ACT
     try {
         await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
     }
     catch(e) {
+        registerSucceeded = false;
         console.log(e);
     }
-    let result = await config.flightSuretyData.isAirline.call(newAirline); 
+
 
     // ASSERT
-    assert.equal(result, false, "Airline should  be able to register another airline if it has provided funding");
+    assert.equal(registerSucceeded, false, "Airline should not be able to register another airline if it has not provided funding");
 
   });
 
@@ -95,19 +116,14 @@ contract('Flight Surety Tests', async (accounts) => {
     
     // ARRANGE
     let newAirline = accounts[2];
+    let registerSucceeded = true;
 
     // ACT
-    // Probably not needed, since previous test registered this airline, but
-    // good practice to make tests independent. This will probably throw
-    // an exception due to 'require' in the registerAirline, so catch and ignore it
-    try {
-        await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
-    }
-    catch(e) {
-    }
+
+    // Fund first airline
     try {
         await web3.eth.sendTransaction({
-            from: newAirline,
+            from: config.firstAirline,
             to: config.flightSuretyApp.address,
             value: Web3.utils.toWei('10', 'ether')
         });
@@ -115,12 +131,22 @@ contract('Flight Surety Tests', async (accounts) => {
     catch(e) {
         console.log(e);
     }
-    let result = await config.flightSuretyData.isAirline.call(newAirline); 
+
+
+    // First airline should now be able to register another airline
+    try {
+        await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
+    }
+    catch(e) {
+        registerSucceeded = false;
+        console.log(e);
+    }
 
     // ASSERT
-    assert.equal(result, true, "Airline should be able to register another airline if it has provided funding");
+    assert.equal(registerSucceeded, true, "Airline should  be able to register another airline if it has provided funding");
 
   });
+
  
 
 });

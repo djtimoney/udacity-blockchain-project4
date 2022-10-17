@@ -26,7 +26,7 @@ contract FlightSuretyApp {
 
     address private contractOwner;          // Account used to deploy contract
 
-    bool isOperational = true;
+    bool operational = true;
 
     FlightSuretyData flightSuretyData;
 
@@ -56,7 +56,7 @@ contract FlightSuretyApp {
     modifier requireIsOperational() 
     {
          // Modify to call data contract's status
-        require(isOperational, "Contract is currently not operational");  
+        require(operational, "Contract is currently not operational");  
         _;  // All modifiers require an "_" which indicates where the function body will be added
     }
 
@@ -77,6 +77,15 @@ contract FlightSuretyApp {
         require(flightSuretyData.isAirline(msg.sender), "Caller is a FlightSurety-registered airline");
         _;
     }
+
+
+    /********************************************************************************************/
+    /*                                       EVENT DEFINITIONS                                  */
+    /********************************************************************************************/
+    event AirlineRegistered(address airline, bool approved);
+    event PolicyPurchased(bytes32 flightKey, address insuree, uint256 price);
+    event PolicyPaidOut(bytes32 flightKey, address insuree, uint256 payoutAmount);
+    event NonContractOwner(address caller, address contractOwner);
 
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
@@ -101,17 +110,30 @@ contract FlightSuretyApp {
     /********************************************************************************************/
 
 
-
     function setOperatingStatus
                             (
-                                bool operational
+                                bool mode
                             )
                             external
                             requireContractOwner
     {
-        isOperational = operational;
+        operational = mode;
         flightSuretyData.setOperatingStatus(operational);
     }
+
+    /**
+    * @dev Get operating status of contract
+    *
+    * @return A bool that is the current operating status
+    */      
+    function isOperational() 
+                            public 
+                            view 
+                            returns(bool) 
+    {
+        return operational;
+    }
+
 
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
@@ -127,8 +149,15 @@ contract FlightSuretyApp {
                                 address nominee
                             )
                             external
+                            requireIsOperational
                             returns(bool success, uint256 votes)
     {
+        // Anyone can register themselves, but only registered airlines
+        // can register a third party
+        if (msg.sender != nominee) {
+            require(flightSuretyData.isAirline(msg.sender), "Sender is not a registered airline");
+        }
+
         return flightSuretyData.registerAirline(msg.sender, nominee);
     }
 
@@ -141,6 +170,7 @@ contract FlightSuretyApp {
                             (   
                             )
                             public
+                            requireIsOperational
                             payable
     {
         require(msg.value > 0, "value must be greater than zero");
@@ -156,6 +186,7 @@ contract FlightSuretyApp {
 
                 )
                 external
+                requireIsOperational
                 payable
      {
         require (flightSuretyData.hasPayout(msg.sender), "No payout due");
@@ -175,6 +206,7 @@ contract FlightSuretyApp {
                     uint256 timestamp
                 )
                 external
+                requireIsOperational
                 payable
     {
         require (msg.value > 0, "This function requires funds");
@@ -194,6 +226,7 @@ contract FlightSuretyApp {
                                     uint256 timestamp
                                 )
                                 external
+                                requireIsOperational
                                 requireAirline
     {
         require(timestamp > now, "Only future flights can be registered");
@@ -505,6 +538,14 @@ contract FlightSuretyData {
                         returns(bytes32); 
 
         function isAirline 
+                        (
+                            address airline
+                        )
+                        public
+                        view
+                        returns(bool);
+
+        function isRegistered
                         (
                             address airline
                         )

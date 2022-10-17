@@ -67,7 +67,7 @@ contract FlightSuretyData {
 
     /**
     * @dev Constructor
-    *      The deploying account becomes contractOwner
+    *      The deploying account becomes contractOwner and is registered as an airline
     */
     constructor
                                 (
@@ -75,6 +75,11 @@ contract FlightSuretyData {
                                 public
     {
         contractOwner = msg.sender;
+        airlines[contractOwner].approved = true;
+        airlines[contractOwner].numVotes = 0;
+        airlines[contractOwner].airlineAddress = contractOwner;
+        airlines[contractOwner].canParticipate = true;
+
     }
 
     /********************************************************************************************/
@@ -152,6 +157,15 @@ contract FlightSuretyData {
         return operational;
     }
 
+
+    /**
+    * @dev Is airline registered
+    * @return A bool that is true if airline is approved.
+    */
+    function isRegistered(address airline) public view returns(bool) {
+        return(airlines[airline].approved);
+    }
+
     /**
     * @dev Is airline valid participant?
     * @return A bool that is true if airline is approved and has provided necessary funds
@@ -200,7 +214,7 @@ contract FlightSuretyData {
                                 bool mode
                             ) 
                             external
-                            requireContractOwner 
+                            requireValidCaller
     {
         operational = mode;
     }
