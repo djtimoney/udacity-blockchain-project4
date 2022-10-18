@@ -85,7 +85,6 @@ contract FlightSuretyApp {
     event AirlineRegistered(address airline, bool approved);
     event PolicyPurchased(bytes32 flightKey, address insuree, uint256 price);
     event PolicyPaidOut(bytes32 flightKey, address insuree, uint256 payoutAmount);
-    event NonContractOwner(address caller, address contractOwner);
 
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
@@ -141,7 +140,8 @@ contract FlightSuretyApp {
 
   
    /**
-    * @dev Add an airline to the registration queue
+    * @dev Add an airline to the registration queue.  Airlines can register themselves,
+    * or airlines that are funded can register a third-party, to support multivote.
     *
     */   
     function registerAirline
@@ -152,11 +152,10 @@ contract FlightSuretyApp {
                             requireIsOperational
                             returns(bool success, uint256 votes)
     {
-        // Anyone can register themselves, but only registered airlines
-        // can register a third party
+        // If this is a third-party registration, make sure airline is a valid participant
         if (msg.sender != nominee) {
             require(flightSuretyData.isAirline(msg.sender), "Sender is not a registered airline");
-        }
+        } 
 
         return flightSuretyData.registerAirline(msg.sender, nominee);
     }
@@ -501,7 +500,7 @@ contract FlightSuretyData {
                                 address airline,
                                 uint256 amount
                             )
-                            external
+                            public
                             returns (bool);
 
         function recordPolicy

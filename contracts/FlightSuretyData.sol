@@ -241,11 +241,13 @@ contract FlightSuretyData {
         require((airlines[nominee].approved == false), "Airline already registered");
         require((airlines[nominee].voters[voter] == false), "Duplicate vote for this airline");
         airlines[nominee].voters[voter] = true;
-        airlines[nominee].numVotes = airlines[nominee].numVotes.add(1);
+        if (voter != nominee) {
+            airlines[nominee].numVotes = airlines[nominee].numVotes.add(1);
+        } 
         // See if this is first registration for this airline
         if (airlines[nominee].airlineAddress == nominee) {
             // Airline already in queue.  Must need a multivote.
-            if (airlines[nominee].numVotes >= numAirlines.div(2)) {
+            if (airlines[nominee].numVotes >= numAirlines.add(1).div(2)) {
                 airlines[nominee].approved = true;
             }
         } else {
