@@ -9,7 +9,6 @@ contract('Flight Surety Tests', async (accounts) => {
   before('setup contract', async () => {
     config = await Test.Config(accounts);
     await config.flightSuretyData.authorizeCaller(config.flightSuretyApp.address);
-    await config.flightSuretyApp.registerAirline(config.firstAirline, {from: config.owner});
   });
 
 
@@ -83,7 +82,7 @@ contract('Flight Surety Tests', async (accounts) => {
 
   });
 
-  it(`(airline) first airline is registered by contract initialization`, async function () {
+  it(`(airline contract initialization) first airline is registered by contract initialization`, async function () {
 
     let registered = await config.flightSuretyData.isRegistered(config.firstAirline);
 
@@ -91,51 +90,68 @@ contract('Flight Surety Tests', async (accounts) => {
 
   });
 
-  it('(airline) cannot register an Airline using registerAirline() if it is not funded', async () => {
+  it('(airline ante) cannot register an Airline using registerAirline() if it is not funded', async () => {
     
     // ARRANGE
     let newAirline = accounts[2];
     let registerSucceeded = true;
 
+
     // ACT
+
+    // First airline registers a new airline. This should work
     try {
         await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
     }
     catch(e) {
         registerSucceeded = false;
     }
+    assert.equal(registerSucceeded, true, "First airline should be able to register others");
 
+    // Airline just added should not be able to register another since it is unfunded
+    try {
+        await config.flightSuretyApp.registerAirline(accounts[3], {from: newAirline});
+        registerSucceeded = true;
+    }
+    catch(e) 
+    {
+        registerSucceeded = false;
+    }
+    
 
     // ASSERT
     assert.equal(registerSucceeded, false, "Airline should not be able to register another airline if it has not provided funding");
 
   });
 
-  it('(airline) can register an Airline using registerAirline() after it is funded', async () => {
+  it('(airline ante) can register an Airline using registerAirline() after it is funded', async () => {
     
     // ARRANGE
-    let newAirline = accounts[2];
+    let secondAirline = accounts[2];
+    let newAirline = accounts[3];
     let registerSucceeded = true;
 
     // ACT
 
-    // Fund first airline
+    // Fund second airline
     try {
         await web3.eth.sendTransaction({
-            from: config.firstAirline,
+            from: secondAirline,
             to: config.flightSuretyApp.address,
             value: Web3.utils.toWei('10', 'ether')
         });
     }
     catch(e) {
+        console.log(e);
     }
 
 
-    // First airline should now be able to register another airline
+    // Second airline should now be able to register another airline
     try {
-        await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
+        await config.flightSuretyApp.registerAirline(newAirline, {from: secondAirline});
     }
     catch(e) {
+        console.log(e);
         registerSucceeded = false;
     }
 
@@ -144,10 +160,10 @@ contract('Flight Surety Tests', async (accounts) => {
 
   });
 
-  it('(multiparty) new airline requires vote after 5 are registered', async () => {
+  it('(multiparty consensus) new airline requires vote after 5 are registered', async () => {
     
     // ARRANGE
-    let mostRecentAirline = accounts[2];
+    let mostRecentAirline = accounts[3];
     let registerSucceeded = true;
 
     let setupFailed = false;
@@ -167,11 +183,11 @@ contract('Flight Surety Tests', async (accounts) => {
 
     assert.equal(setupFailed, false, "Could not fund last airline added");
 
-    // Register and fund 3 more airlines
-    for (i = 3 ; i < 6 ; i++) {
+    // Now there are 3 funded airlines.  Add 2 more
+    for (i = 4 ; i < 6 ; i++) {
         let airline = accounts[i];
         try {
-            await config.flightSuretyApp.registerAirline(airline, {from: airline});
+            await config.flightSuretyApp.registerAirline(airline, {from: config.firstAirline});
             setupFailed = false;
         }
         catch(e) {
@@ -203,7 +219,7 @@ contract('Flight Surety Tests', async (accounts) => {
     // but airline should not be approved yet.
     let newAirline = accounts[6]
     try {
-        await config.flightSuretyApp.registerAirline(newAirline, {from: newAirline});
+        await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
     }
     catch(e) {
         registerSucceeded = false;
@@ -216,10 +232,10 @@ contract('Flight Surety Tests', async (accounts) => {
 
   });
 
-  it('(multiparty) Airline is not approved if only 1 airline voted for it', async () => {
+  it('(multiparty consensus) Airline is not approved if only 1 airline voted for it', async () => {
     
     // ARRANGE
-    let newAirline = accounts[6];
+    let newAirline = accounts[7];
     let registerSucceeded = true;
 
     // ACT
@@ -228,10 +244,11 @@ contract('Flight Surety Tests', async (accounts) => {
 
     // First airline votes to register new airline
     try {
-        await config.flightSuretyApp.registerAirline(newAirline, {from: accounts[1]});
+        await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
         registerSucceeded = true;
     }
     catch(e) {
+        console.log(e);
         registerSucceeded = false;
     }
 
@@ -243,10 +260,10 @@ contract('Flight Surety Tests', async (accounts) => {
     assert.equal(approved, false, "New airline should not be approved after one vote");
   });
 
-  it('(multiparty) Airline is not approved if only 2 airlines voted for it', async () => {
+  it('(multiparty consensus) Airline is not approved if only 2 airlines voted for it', async () => {
     
     // ARRANGE
-    let newAirline = accounts[6];
+    let newAirline = accounts[7];
     let registerSucceeded = true;
 
     // ACT
@@ -273,10 +290,10 @@ contract('Flight Surety Tests', async (accounts) => {
   });
 
 
-  it('(multiparty) Airline is approved if 3 airlines voted for it', async () => {
+  it('(multiparty consensus) Airline is approved if 3 airlines voted for it', async () => {
     
     // ARRANGE
-    let newAirline = accounts[6];
+    let newAirline = accounts[7];
     let registerSucceeded = true;
 
     // ACT
@@ -303,6 +320,79 @@ contract('Flight Surety Tests', async (accounts) => {
 
   });
 
- 
+  it('(airline - flight data) Add flight for first airline', async () => {
+    
+    // ARRANGE
+    let airline = config.firstAirline;
+    let flightNum = "ONE0001";
+    let flightAdded = true;
+    let flightDate = new Date();
+    flightDate.setDate(flightDate.getDate() + 7);
+    let flightTimestamp = flightDate.getTime();
+
+    // ACT
+    try {
+        await config.flightSuretyApp.registerFlight(flightNum, flightTimestamp, {from: airline});
+    }
+    catch(e)
+    {
+        flightAdded = false;
+    }
+
+     
+    // ASSERT
+    assert.equal(flightAdded, true, "Failed to add flight "+flightNum+" for airline "+airline);
+
+  });
+
+  it('(airline - flight data) Add flight for second airline', async () => {
+    
+    // ARRANGE
+    let airline = accounts[2];
+    let flightNum = "TWO0202";
+    let flightAdded = true;
+    let flightDate = new Date();
+    flightDate.setDate(flightDate.getDate() + 8);
+    let flightTimestamp = flightDate.getTime();
+
+    // ACT
+    try {
+        await config.flightSuretyApp.registerFlight(flightNum, flightTimestamp, {from: airline});
+    }
+    catch(e)
+    {
+        flightAdded = false;
+    }
+
+     
+    // ASSERT
+    assert.equal(flightAdded, true, "Failed to add flight "+flightNum+" for airline "+airline);
+
+  });
+
+  it('(airline - flight data) Attempt to add flight for unregistered airline should fail', async () => {
+    
+    // ARRANGE
+    let airline = accounts[6];
+    let flightNum = "SIX0666";
+    let flightAdded = true;
+    let flightDate = new Date();
+    flightDate.setDate(flightDate.getDate() + 6);
+    let flightTimestamp = flightDate.getTime();
+
+    // ACT
+    try {
+        await config.flightSuretyApp.registerFlight(flightNum, flightTimestamp, {from: airline});
+    }
+    catch(e)
+    {
+        flightAdded = false;
+    }
+
+     
+    // ASSERT
+    assert.equal(flightAdded, false, "Should not be able to add flight for unregistered airline");
+
+  });
 
 });

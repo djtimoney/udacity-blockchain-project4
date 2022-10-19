@@ -150,13 +150,9 @@ contract FlightSuretyApp {
                             )
                             external
                             requireIsOperational
+                            requireAirline
                             returns(bool success, uint256 votes)
     {
-        // If this is a third-party registration, make sure airline is a valid participant
-        if (msg.sender != nominee) {
-            require(flightSuretyData.isAirline(msg.sender), "Sender is not a registered airline");
-        } 
-
         return flightSuretyData.registerAirline(msg.sender, nominee);
     }
 

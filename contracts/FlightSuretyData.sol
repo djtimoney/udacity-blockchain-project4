@@ -12,6 +12,8 @@ contract FlightSuretyData {
     address private contractOwner;                                      // Account used to deploy contract
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
 
+    address constant firstAirline = 0xf17f52151EbEF6C7334FAD080c5704D77216b732;  // Hard-coded first airline to accounts[1]
+
     mapping(address => bool) private authorizedContracts;
 
     struct Airline {
@@ -62,6 +64,7 @@ contract FlightSuretyData {
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
     event AirlineRegistered(address airline, bool approved);
+    event FundingReceived(address airline, uint256 funding, uint256 buyIn, bool canParticipate);
     event PolicyPurchased(bytes32 flightKey, address insuree, uint256 price);
     event PolicyPaidOut(bytes32 flightKey, address insuree, uint256 payoutAmount);
 
@@ -75,10 +78,11 @@ contract FlightSuretyData {
                                 public
     {
         contractOwner = msg.sender;
-        airlines[contractOwner].approved = true;
-        airlines[contractOwner].numVotes = 0;
-        airlines[contractOwner].airlineAddress = contractOwner;
-        airlines[contractOwner].canParticipate = true;
+        airlines[firstAirline].approved = true;
+        airlines[firstAirline].numVotes = 0;
+        airlines[firstAirline].airlineAddress = firstAirline;
+        airlines[firstAirline].canParticipate = true;
+        numAirlines = 1;
 
     }
 
@@ -240,10 +244,10 @@ contract FlightSuretyData {
     {
         require((airlines[nominee].approved == false), "Airline already registered");
         require((airlines[nominee].voters[voter] == false), "Duplicate vote for this airline");
+
         airlines[nominee].voters[voter] = true;
-        if (voter != nominee) {
-            airlines[nominee].numVotes = airlines[nominee].numVotes.add(1);
-        } 
+        airlines[nominee].numVotes = airlines[nominee].numVotes.add(1);
+
         // See if this is first registration for this airline
         if (airlines[nominee].airlineAddress == nominee) {
             // Airline already in queue.  Must need a multivote.
@@ -373,6 +377,8 @@ contract FlightSuretyData {
         if (airlines[airline].funding >= buyInAmount) {
             airlines[airline].canParticipate = true;
         }
+
+        emit FundingReceived(airline, airlines[airline].funding, buyInAmount, airlines[airline].canParticipate);
         return(airlines[airline].canParticipate);
     }
 
