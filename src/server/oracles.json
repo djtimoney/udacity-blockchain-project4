@@ -1,0 +1,405 @@
+{
+    "num_oracles": 100,
+    "oracles": [
+        {
+            "account": "0xE44c4cf797505AF1527B11e4F4c6f95531b4Be24",
+            "return_status": 20
+        },
+        {
+            "account": "0x69e1CB5cFcA8A311586e3406ed0301C06fb839a2",
+            "return_status": 20
+        },
+        {
+            "account": "0xF014343BDFFbED8660A9d8721deC985126f189F3",
+            "return_status": 20
+        },
+        {
+            "account": "0x0E79EDbD6A727CfeE09A2b1d0A59F7752d5bf7C9",
+            "return_status": 20
+        },
+        {
+            "account": "0x9bC1169Ca09555bf2721A5C9eC6D69c8073bfeB4",
+            "return_status": 20
+        },
+        {
+            "account": "0xa23eAEf02F9E0338EEcDa8Fdd0A73aDD781b2A86",
+            "return_status": 20
+        },
+        {
+            "account": "0xc449a27B106BE1120Bd1Fd62F8166A2F61588eb9",
+            "return_status": 20
+        },
+        {
+            "account": "0xF24AE9CE9B62d83059BD849b9F36d3f4792F5081",
+            "return_status": 20
+        },
+        {
+            "account": "0xc44B027a94913FB515B19F04CAf515e74AE24FD6",
+            "return_status": 20
+        },
+        {
+            "account": "0xcb0236B37Ff19001633E38808bd124b60B1fE1ba",
+            "return_status": 20
+        },
+        {
+            "account": "0x715e632C0FE0d07D02fC3d2Cf630d11e1A45C522",
+            "return_status": 20
+        },
+        {
+            "account": "0x90FFD070a8333ACB4Ac1b8EBa59a77f9f1001819",
+            "return_status": 20
+        },
+        {
+            "account": "0x036945CD50df76077cb2D6CF5293B32252BCe247",
+            "return_status": 20
+        },
+        {
+            "account": "0x23f0227FB09D50477331D2BB8519A38a52B9dFAF",
+            "return_status": 20
+        },
+        {
+            "account": "0x799759c45265B96cac16b88A7084C068d38aFce9",
+            "return_status": 20
+        },
+        {
+            "account": "0xA6BFE07B18Df9E42F0086D2FCe9334B701868314",
+            "return_status": 20
+        },
+        {
+            "account": "0x39Ae04B556bbdD73123Bab2d091DCD068144361F",
+            "return_status": 20
+        },
+        {
+            "account": "0x068729ec4f46330d9Af83f2f5AF1B155d957BD42",
+            "return_status": 20
+        },
+        {
+            "account": "0x9EE19563Df46208d4C1a11c9171216012E9ba2D0",
+            "return_status": 20
+        },
+        {
+            "account": "0x04ab41d3d5147c5d2BdC3BcFC5e62539fd7e428B",
+            "return_status": 20
+        },
+        {
+            "account": "0xeF264a86495fF640481D7AC16200A623c92D1E37",
+            "return_status": 20
+        },
+        {
+            "account": "0x645FdC97c87c437da6b11b72471a703dF3702813",
+            "return_status": 20
+        },
+        {
+            "account": "0xbE6f5bF50087332024634d028eCF896C7b482Ab1",
+            "return_status": 20
+        },
+        {
+            "account": "0xcE527c7372B73C77F3A349bfBce74a6F5D800d8E",
+            "return_status": 20
+        },
+        {
+            "account": "0x21ec0514bfFefF9E0EE317b8c87657E4a30F4Fb2",
+            "return_status": 20
+        },
+        {
+            "account": "0xEAA2fc390D0eC1d047dCC1210a9Bf643d12de330",
+            "return_status": 20
+        },
+        {
+            "account": "0xC5fa34ECBaF44181f1d144C13FBaEd69e76b80f1",
+            "return_status": 20
+        },
+        {
+            "account": "0x4F388EE383f1634d952a5Ed8e032Dc27094f44FD",
+            "return_status": 20
+        },
+        {
+            "account": "0xeEf5E3535aA39e0C2266BbA234E187adA9ed50A1",
+            "return_status": 20
+        },
+        {
+            "account": "0x6008E128477ceEE5561fE2dEAdD82564d29fD249",
+            "return_status": 20
+        },
+        {
+            "account": "0xfEf504C230aA4c42707FcBFfa46aE640498BC2cb",
+            "return_status": 20
+        },
+        {
+            "account": "0x70C8F02D4e44d906e80a8d0b1591Ab569a20Ae9C",
+            "return_status": 20
+        },
+        {
+            "account": "0x53eF3e89950e97bAD7d027F41ab05debc7Bb5c74",
+            "return_status": 20
+        },
+        {
+            "account": "0xE3c27A49b81a7D59DC516D58ab2E5ee6A545c008",
+            "return_status": 20
+        },
+        {
+            "account": "0xc496E6FEACf5D7ee4E1609179fA4C1D1698116ec",
+            "return_status": 50
+        },
+        {
+            "account": "0x5598CA13044003326C25459B4E9B778922C8a00e",
+            "return_status": 50
+        },
+        {
+            "account": "0x5Fb25C1c734D077fdFb603E9f586Bee11706a042",
+            "return_status": 20
+        },
+        {
+            "account": "0x3E5a0f348C831b489deC1be087f8Ef182A4CfE54",
+            "return_status": 20
+        },
+        {
+            "account": "0x6a90Ed741Fe4B87545a127879bA18F41FD17fdB5",
+            "return_status": 20
+        },
+        {
+            "account": "0xa1AD47355B994Cc18Bd709789055DeFD54e738E3",
+            "return_status": 20
+        },
+        {
+            "account": "0x7c22D70Abcc54bB97b172f5FcF78D896B3406135",
+            "return_status": 20
+        },
+        {
+            "account": "0x2c24BE8144ddF9f45c99288f6349b5c8500F628f",
+            "return_status": 20
+        },
+        {
+            "account": "0xa3f946F2e9e30f00b45FE0791C31F7B64A571b2f",
+            "return_status": 20
+        },
+        {
+            "account": "0x6FEba51DCD19CA406F1265bD7eC5178103aF55C2",
+            "return_status": 20
+        },
+        {
+            "account": "0xAafCa8e6b0e49e2a22AC3B6565041d5cb59dF242",
+            "return_status": 20
+        },
+        {
+            "account": "0xDb6388B2F66e6816386959e60e2D34A8a3909578",
+            "return_status": 20
+        },
+        {
+            "account": "0x27E53C8f3863e9a2C070b7fE842aD926cD49Db2F",
+            "return_status": 20
+        },
+        {
+            "account": "0xE8182F4e9378349D8148bA8C82A51f61392D753e",
+            "return_status": 20
+        },
+        {
+            "account": "0xFEd6014661477bA594Ff0A2dBa1EC970ef8c3bC9",
+            "return_status": 20
+        },
+        {
+            "account": "0x3f7632EF242f7492C2860296960b7c31A9474Fd5",
+            "return_status": 20
+        },
+        {
+            "account": "0xBE0138d90839f3e78cA6df97a83f71d0c2725De4",
+            "return_status": 20
+        },
+        {
+            "account": "0xEB48C891256E49662f60f8d0367aF51803A99f98",
+            "return_status": 20
+        },
+        {
+            "account": "0x2924176c979b7491FE6eA6a5d100A9291E12e33c",
+            "return_status": 20
+        },
+        {
+            "account": "0xD7f1E3aCdc33566363316B7553Aa558CbCaE260e",
+            "return_status": 20
+        },
+        {
+            "account": "0x1b8FA770f013173Ee66dA32E3836918aa39efB77",
+            "return_status": 20
+        },
+        {
+            "account": "0x4f6a07Ab35b1b9c8c0613185002F98B8D8990c3F",
+            "return_status": 20
+        },
+        {
+            "account": "0xdf230F62739beDcB1BED428906232a44Bc37De3a",
+            "return_status": 20
+        },
+        {
+            "account": "0xd9fFF40762dD21703D33E9E3e16553dCF452Ad41",
+            "return_status": 20
+        },
+        {
+            "account": "0x4A5446ACE419aF2261D1C0B599E59a09e67b1C41",
+            "return_status": 20
+        },
+        {
+            "account": "0xeE9eDbbFD46D4F330857295ad59632649F45Cf6C",
+            "return_status": 20
+        },
+        {
+            "account": "0x4016e2585E3DB4a0d9d5B7F0266A95Cfa9b8BfaE",
+            "return_status": 20
+        },
+        {
+            "account": "0x1005a8fb0c2501180486E0544D199725cFD218F4",
+            "return_status": 40
+        },
+        {
+            "account": "0x27b439aB6e029BE399059466989601206919a3e4",
+            "return_status": 40
+        },
+        {
+            "account": "0x99F96044b954Af5C4969cB0c129Fcf407f90A632",
+            "return_status": 20
+        },
+        {
+            "account": "0x38B7584dbFf65a8599fb6b1ebD08B3d8cc16F797",
+            "return_status": 20
+        },
+        {
+            "account": "0x5Cec2a9F56952405Fe7F845Fe2E731ef9D460a9c",
+            "return_status": 20
+        },
+        {
+            "account": "0xA43029cBb00427186357BE8aF43335A29a34BC0b",
+            "return_status": 20
+        },
+        {
+            "account": "0x7b2681B998A86eBF8150229B9651fa0233D8814d",
+            "return_status": 20
+        },
+        {
+            "account": "0x2c8D36FE19a6Ca7440e84BfecD905F9f9A6a7df9",
+            "return_status": 20
+        },
+        {
+            "account": "0x0cD9D0cB4BD933c1D64aEF87B1e84F163a2C0553",
+            "return_status": 10
+        },
+        {
+            "account": "0x99180d6AedDfd94fc796a227EE34DFE22078aE5e",
+            "return_status": 20
+        },
+        {
+            "account": "0xcaB1c7A9eE99A655BDa5D1b625763C3c807BFEDe",
+            "return_status": 30
+        },
+        {
+            "account": "0x9CBB0B5ffd362c353B6f2D81bd38079396b97CDC",
+            "return_status": 30
+        },
+        {
+            "account": "0x3954f1d3F4355E0dc3fb68d89827B5831D3A2322",
+            "return_status": 20
+        },
+        {
+            "account": "0x38A17A4206d500877d478BF22e3bc7b378aB6C44",
+            "return_status": 20
+        },
+        {
+            "account": "0x243903f923397f46B4bdEa61A4C324E6C328A217",
+            "return_status": 20
+        },
+        {
+            "account": "0x9Ad91b22A214d52Ea0aB068E9B1B3c3F41479385",
+            "return_status": 20
+        },
+        {
+            "account": "0x973A8c93872794B69b7dE8aAC48273278C5b7BBB",
+            "return_status": 20
+        },
+        {
+            "account": "0x767FB55673CF802ad4Ed3D331180371E17B66DAD",
+            "return_status": 20
+        },
+        {
+            "account": "0x2F9DF293d1bf13FaD9eb390BB842299e41Bed561",
+            "return_status": 20
+        },
+        {
+            "account": "0xb2ddED06c43dcA21C57244617c7f7a9d84579FDE",
+            "return_status": 20
+        },
+        {
+            "account": "0x1B0B69172bAd8ce9277120E3DE285e35278202e8",
+            "return_status": 20
+        },
+        {
+            "account": "0x7d902745B78Ac21DbE042Aa35939af4132778A6C",
+            "return_status": 20
+        },
+        {
+            "account": "0xB6E565b4ad4e11a6B129d58326Ec4c7d22e4Ea98",
+            "return_status": 20
+        },
+        {
+            "account": "0x0bAE34BC2D2dED3A3C4F7a9C35F3197C8e2C1986",
+            "return_status": 20
+        },
+        {
+            "account": "0xC2fA1bACE4DDA22d84a466884493Fad6f71E0275",
+            "return_status": 20
+        },
+        {
+            "account": "0xcBFfa1EE1E37EE59923C444C727c54720c774C62",
+            "return_status": 20
+        },
+        {
+            "account": "0xCfa760C770686a06669c01EbAED9b92D37794d4C",
+            "return_status": 20
+        },
+        {
+            "account": "0x6557f2bedDCE2a2A54610Ded9959c2AEbA112904",
+            "return_status": 20
+        },
+        {
+            "account": "0x1B0A272Dc71CcD96685ae33266EA0c1264d3B670",
+            "return_status": 20
+        },
+        {
+            "account": "0x2d027742100CD61C82Ad5Cb569a59b68C555212c",
+            "return_status": 20
+        },
+        {
+            "account": "0x21F8C76a12F52fe01d63062957Bd2E12C335b64B",
+            "return_status": 20
+        },
+        {
+            "account": "0x83251D054a0db4127Ab9dC147028B0F5344e47bc",
+            "return_status": 20
+        },
+        {
+            "account": "0x7CD7b93f4D7de68335C2AA4e3970aAb5CabA7498",
+            "return_status": 20
+        },
+        {
+            "account": "0x875844B90709d8E6D9804086A8af4343eeC1eaFf",
+            "return_status": 20
+        },
+        {
+            "account": "0x6b7002cBd9a80cD387e841992a84a54718B9EeBF",
+            "return_status": 20
+        },
+        {
+            "account": "0x9601583e1165d990E12B714f7A0A0B00CCaA8Cf0",
+            "return_status": 20
+        },
+        {
+            "account": "0x8cc7F5805aB6D1CF1b7FaB7506995b86EA8e9057",
+            "return_status": 20
+        },
+        {
+            "account": "0x22402a99789d51E1DF73384ad0d5b14f500159FD",
+            "return_status": 20
+        },
+        {
+            "account": "0x4002a4904Cf3816e760ACcf7B6E39c2806d11A2a",
+            "return_status": 20
+        }
+    ]
+}
