@@ -74,17 +74,18 @@ flightSuretyApp.events.OracleRequest({
         console.log("Oracle["+j+"]: this is one of mine!");
 
         flightSuretyApp.methods
-        .submitOracleResponse()
-        .send(index, 
-             airline,
-             flight,
-             timestamp,
-             oracles[j].return_status, 
+        .submitOracleResponse(
+          index,
+          airline,
+          flight,
+          timestamp,
+          oracles[j].return_status)
+        .send(
              {from: oracles[j].account,
               gas: 4712388,             
               gasPrice: 100000000000 
-               })
-
+               }
+        )
       } 
     } else {
       console.log("Oracle["+j+"]: I have no indexes!");
