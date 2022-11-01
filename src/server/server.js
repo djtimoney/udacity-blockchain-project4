@@ -95,6 +95,21 @@ flightSuretyApp.events.OracleRequest({
 });
 
 
+flightSuretyApp.events.FlightStatusInfo({
+  fromBlock: 0
+}, function (error, result) {
+  console.log("Got FlightStatusInfo");
+  if (error) {
+    console.log("Error:");
+    console.log(error);
+  }
+
+  console.log("Result: ");
+  console.log(result);
+
+});
+
+
 
 
 const app = express();

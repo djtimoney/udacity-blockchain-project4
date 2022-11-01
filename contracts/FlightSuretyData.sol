@@ -320,7 +320,6 @@ contract FlightSuretyData {
                                     bytes32 flightKey
                                 )
                                 external
-                                requireValidCaller
                                 requireIsOperational
     {
         uint numPolicies = policies[flightKey].length;

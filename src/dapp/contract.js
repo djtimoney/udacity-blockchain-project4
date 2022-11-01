@@ -53,4 +53,5 @@ export default class Contract {
                 callback(error, payload);
             });
     }
+
 }
