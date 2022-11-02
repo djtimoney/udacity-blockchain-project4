@@ -12,6 +12,8 @@ export default class Contract {
         this.owner = null;
         this.airlines = [];
         this.passengers = [];
+        this.flights = [];
+        this.codes = ['AA', 'DL', 'JB', 'SP', 'UA'];
     }
 
     initialize(callback) {
@@ -29,9 +31,32 @@ export default class Contract {
                 this.passengers.push(accts[counter++]);
             }
 
+            this.listenToAirlineRegistrations();
+
+            
+
             callback();
         });
     }
+
+    async listenToAirlineRegistrations() {
+        // Listen for airline registrations
+        let self = this;
+        self.flightSuretyApp.events.AirlineRegistered({
+            fromBlock: 0
+            }, function (error, result) {
+                // If airline is approved, send ante
+                if (result.returnValues.approved) {
+                    self.web3.eth.sendTransaction(
+                        {from: result.returnValues.airline,
+                         value: self.web3.utils.toWei('10', 'ether')}
+                    );
+                }       
+            });
+    }
+
+
+
 
     isOperational(callback) {
        let self = this;
@@ -52,6 +77,24 @@ export default class Contract {
             .send({ from: self.owner}, (error, result) => {
                 callback(error, payload);
             });
+    }
+
+    registerAirlines(callback) {
+        let self = this;
+
+        for (var i = 1 ; i < 5 ; i++) {
+            var airline = self.airlines[i];
+            // Register airline
+            self.flightSuretyApp.methods
+                .registerAirline(self.airlines[i])
+                .send({from: self.airlines[0]}, (error, result) => {
+                    callback(error,airline);
+                });
+
+        }
+
+
+
     }
 
 }

@@ -24,7 +24,13 @@ import './flightsurety.css';
             contract.fetchFlightStatus(flight, (error, result) => {
                 display('Oracles', 'Trigger oracles', [ { label: 'Fetch Flight Status', error: error, value: result.flight + ' ' + result.timestamp} ]);
             });
-        })
+        });
+
+        // Register airlines
+        var airlineCnt = 0;
+        contract.registerAirlines((error, result) => {
+            console.log("registerAirlines result: "+JSON.stringify(result, null, 4));
+        });
     
     });
     
