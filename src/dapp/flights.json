@@ -1,0 +1,40 @@
+{
+    "flights" : [
+        {
+            "airline_index": 0,
+            "flight": "AA1010",
+            "seconds_offset": 120,
+            "days_offset": 0
+        },
+        {
+            "airline_index": 0,
+            "flight": "AA1012",
+            "seconds_offset": 3600,
+            "days_offset": 0
+        },
+        {
+            "airline_index": 1,
+            "flight": "DL0430",
+            "seconds_offset": 100,
+            "days_offset": 0
+        },
+        {
+            "airline_index": 1,
+            "flight": "DL0510",
+            "seconds_offset": 60,
+            "days_offset": 0
+        },
+        {
+            "airline_index": 2,
+            "flight": "UA1120",
+            "seconds_offset": 360,
+            "days_offset": 0
+        },
+        {
+            "airline_index": 2,
+            "flight": "UA1130",
+            "seconds_offset": 360,
+            "days_offset": 1
+        }
+    ]
+}

@@ -26,11 +26,14 @@ import './flightsurety.css';
             });
         });
 
-        // Register airlines
-        var airlineCnt = 0;
-        contract.registerAirlines((error, result) => {
-            console.log("registerAirlines result: "+JSON.stringify(result, null, 4));
-        });
+        // Populate flight numbers
+        let flights = contract.getFlights();
+        for (var i = 0 ; i < flights.length ; i++) {
+            let flight_time = new Date();
+            flight_time.setMilliseconds(flights[i].timestamp);
+            let label = flights[i].flight + " "+flight_time.toString();
+            DOM.addOption('flight-number', label, flights[i]);
+        }
     
     });
     

@@ -85,5 +85,13 @@ export default class DOM {
     
       return el;
     }
+
+    static addOption(id, text, value) {
+      const dropdown = DOM.elid(id);
+      let new_option = document.createElement('option');
+      new_option.text = text;
+      new_option.value = value;
+      dropdown.add(new_option);
+    }
   }
     
