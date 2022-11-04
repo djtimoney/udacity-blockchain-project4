@@ -4,18 +4,20 @@ import Web3 from 'web3';
 import Flights from './flights.json';
 
 export default class Contract {
-    constructor(network, callback) {
+    constructor(network, flightStatusCallback, callback) {
 
         let config = Config[network];
-        this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
+        // this.web3 = new Web3(new Web3.providers.HttpProvider(config.url));
+        this.web3 = new Web3(config.url);
         this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
-        this.initialize(callback);
+        this.initialize(callback, flightStatusCallback);
         this.owner = null;
         this.airlines = [];
         this.passengers = [];
         this.flights = Flights.flights;
         this.num_registered = 0;
         this.flight_labels = [];
+        this.flightStatusCallback = flightStatusCallback;
 
   
     }
@@ -41,13 +43,15 @@ export default class Contract {
             //  * index within array
             //  * insured flag, indicating whether insurance has been purchased
 
-            const curtime = new Date();
+
             console.log("Initializing flight info");
+            console.log("Account owner is :"+this.owner);
+
             for (var i = 0 ; i < this.flights.length ; i++) {
-                const flight_time = curtime;
+                let flight_time = new Date();
                 flight_time.setSeconds(flight_time.getSeconds() + this.flights[i].seconds_offset);
                 flight_time.setDate(flight_time.getDate() + this.flights[i].days_offset);
-                this.flights[i].timestamp = flight_time.getMilliseconds();
+                this.flights[i].timestamp = Math.floor(flight_time.getTime() / 1000);
                 this.flights[i].index = i;
                 this.flights[i].insured = false;
                 this.flights[i].airline = this.airlines[this.flights[i].airline_index];
@@ -60,6 +64,10 @@ export default class Contract {
             // Register airlines
             console.log("Registering airlines");
             this.registerAirlines();
+
+            // Start listener for flight status events
+            console.log("Starting flight status listener");
+            this.listenForFlightStatus();
 
             console.log("Initialization complete");
             callback();
@@ -79,12 +87,12 @@ export default class Contract {
             .call({ from: self.owner}, callback);
     }
 
-    fetchFlightStatus(flight, callback) {
+    fetchFlightStatus(flight, timestamp, callback) {
         let self = this;
         let payload = {
             airline: self.airlines[0],
             flight: flight,
-            timestamp: Math.floor(Date.now() / 1000)
+            timestamp: timestamp
         } 
         self.flightSuretyApp.methods
             .fetchFlightStatus(payload.airline, payload.flight, payload.timestamp)
@@ -101,32 +109,93 @@ export default class Contract {
             fromBlock: 0
             }, function (error, result) {
 
-                // If airline is approved, send ante
-                if (result.returnValues.approved) {
-                    this.num_registered += 1;
-                    self.web3.eth.sendTransaction(
-                        {from: result.returnValues.airline,
-                         value: self.web3.utils.toWei('10', 'ether')}
-                    );
-                }   
+                if (result) {
+                    // If airline is approved, send ante
+                    if (result.returnValues.approved) {
+                         self.num_registered += 1;
+                         self.web3.eth.sendTransaction(
+                            {from: result.returnValues.airline,
+                             value: self.web3.utils.toWei('10', 'ether')}
+                         );
+                    }   
+                } else {
+                    console.log("Got AirlineRegistered event with null result!");
+                }
+
+
                 
                 // If all airlines are registered, register flights
-                if (this.num_registered == this.airlines.length) {
+                if (self.num_registered == self.airlines.length) {
                     registerFlights();
 
                 }
             });
     }
 
-    async registerAirlines(callback) {
+    async listenForFlightStatus() {
+        // Listen for flight status
+
+        console.log("Listening for FlightStatus events");
+        let self = this;
+        self.flightSuretyApp.events.FlightStatusInfo({
+            fromBlock: 0
+            }, function (error, result) {
+
+                if (error) {
+                    console.log("Error from flight status event: " +error);
+                }
+
+                let info = {};
+                if (result) {
+                    console.log("Got FlightStatusInfo event: " +JSON.stringify(result, null, 4));
+
+                    let flight_time = new Date();
+                    flight_time.setTime(result.returnValues.timestamp * 1000);
+                    info.airline = result.returnValues.airline;
+                    info.flight = result.returnValues.flight;
+                    info.timestamp = flight_time;
+                    switch (result.returnValues.status) {
+                        case "10":
+                            info.statusCode = "ON TIME";
+                            break;
+                        case "20":
+                            info.statusCode = "LATE (AIRLINE)";
+                            break;
+                        case "30":
+                            info.statusCode = "LATE (WEATHER)";
+                            break;
+                        case "40":
+                            info.statusCode = "LATE (TECHNICAL)";
+                            break;
+                        case "50":
+                            info.statusCode = "LATE (OTHER)";
+                            break;
+                        default:
+                            info.statusCode = "UNKNOWN ("+result.returnValues.status+")";
+                            break;
+                    }
+
+                } else {
+                    console.log("Got FlightStatusInfo event with no result!");
+                }
+
+                self.flightStatusCallback(error, info);
+            });
+    }
+
+    async registerAirlines() {
         let self = this;
 
-        for (var i = 1 ; i < 5 ; i++) {
-            var airline = self.airlines[i];
+        for (var i = 1 ; i < self.airlines.length ; i++) {
+            console.log("Registering airline["+i+"]:"+JSON.stringify(self.airlines[i]));
+            console.log("Sending from: "+self.airlines[0]);
+            
             // Register airline
             self.flightSuretyApp.methods
                 .registerAirline(self.airlines[i])
-                .send({from: self.airlines[0]});
+                .send({from: self.airlines[0]}, (error, result) => {
+                    console.log("Result: " +result);
+                });
 
         }
 
@@ -138,7 +207,9 @@ export default class Contract {
 
             this.flightSuretyApp.methods
             .registerFlight(this.flights[i].flight, this.flights[i].timestamp)
-            .send({from: this.flights[i].airline});
+            .send({from: this.flights[i].airline}, (error, result) => {
+                console.log("Result: " +result);
+            });
         }
     }
 

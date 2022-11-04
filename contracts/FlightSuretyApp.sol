@@ -279,7 +279,8 @@ contract FlightSuretyApp {
         bytes32 key = keccak256(abi.encodePacked(index, airline, flight, timestamp));
         oracleResponses[key] = ResponseInfo({
                                                 requester: msg.sender,
-                                                isOpen: true
+                                                isOpen: true,
+                                                statusCode: 0
                                             });
 
         emit OracleRequest(index, airline, flight, timestamp);
@@ -310,6 +311,7 @@ contract FlightSuretyApp {
     struct ResponseInfo {
         address requester;                              // Account that requested status
         bool isOpen;                                    // If open, oracle responses are accepted
+        uint8 statusCode;                               // Negotiated status code
         mapping(uint8 => address[]) responses;          // Mapping key is the status code reported
                                                         // This lets us group responses and identify
                                                         // the response that majority of the oracles
@@ -381,16 +383,19 @@ contract FlightSuretyApp {
 
 
         bytes32 key = keccak256(abi.encodePacked(index, airline, flight, timestamp)); 
-        require(oracleResponses[key].isOpen, "Flight or timestamp do not match oracle request");
+        require(oracleResponses[key].isOpen, "Flight or timestamp do not match open oracle request");
 
         oracleResponses[key].responses[statusCode].push(msg.sender);
 
         // Information isn't considered verified until at least MIN_RESPONSES
-        // oracles respond with the *** same *** information
+        // oracles respond with the *** same *** information.
+        // Once emitted, mark status closed so that you do not emit multiple statuses
         emit OracleReport(airline, flight, timestamp, statusCode);
-        if (oracleResponses[key].responses[statusCode].length >= MIN_RESPONSES) {
+        if ((oracleResponses[key].statusCode == 0) &&
+             (oracleResponses[key].responses[statusCode].length >= MIN_RESPONSES)) {
 
             emit FlightStatusInfo(airline, flight, timestamp, statusCode);
+            oracleResponses[key].statusCode = statusCode;
 
             // Handle flight status as appropriate
             processFlightStatus(airline, flight, timestamp, statusCode);

@@ -90,8 +90,18 @@ export default class DOM {
       const dropdown = DOM.elid(id);
       let new_option = document.createElement('option');
       new_option.text = text;
-      new_option.value = value;
+      new_option.value = JSON.stringify(value);
       dropdown.add(new_option);
+    }
+
+    static getSelectedValue(id) {
+      const dropdown = DOM.elid(id);
+      console.log("Selected index: " + dropdown.selectedIndex);
+      let retval = JSON.parse(dropdown.options[dropdown.selectedIndex].value);
+
+      console.log("Selected text: "+ dropdown.options[dropdown.selectedIndex].text);
+      console.log("Selected value:" + JSON.stringify(retval));
+      return retval;
     }
   }
     
