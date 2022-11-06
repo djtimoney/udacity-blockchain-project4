@@ -74,7 +74,7 @@ contract FlightSuretyApp {
     */
     modifier requireAirline()
     {
-        require(flightSuretyData.isAirline(msg.sender), "Caller is a FlightSurety-registered airline");
+        require(flightSuretyData.isAirline(msg.sender), "Caller is not a FlightSurety-registered airline");
         _;
     }
 
@@ -102,6 +102,7 @@ contract FlightSuretyApp {
     {
         contractOwner = msg.sender;
         flightSuretyData = FlightSuretyData(dataContract);
+        flightSuretyData.authorizeCaller(address(this));
     }
 
     /********************************************************************************************/
@@ -476,6 +477,12 @@ contract FlightSuretyApp {
 }   
 
 contract FlightSuretyData {
+        function authorizeCaller
+                            (
+                                address caller
+                            )
+                            external;
+
         function setOperatingStatus
                             (
                                 bool mode

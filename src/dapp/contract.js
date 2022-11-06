@@ -191,11 +191,21 @@ export default class Contract {
             console.log("Sending from: "+self.airlines[0]);
             
             // Register airline
-            self.flightSuretyApp.methods
-                .registerAirline(self.airlines[i])
-                .send({from: self.airlines[0]}, (error, result) => {
-                    console.log("Result: " +result);
-                });
+            let req = {}
+            req.registrar = self.airlines[0];
+            req.airline = self.airlines[i];
+            const resp = await fetch("http://localhost:3000/registerAirline/", {
+                method: "POST",
+                body : JSON.stringify(req),
+                headers : {
+                    'Content-Type': 'application/json'
+                }
+
+            });
+
+            const respJson = await resp.json();
+
+            console.log("Registration response: "+JSON.stringify(respJson));
 
         }
 

@@ -52,7 +52,7 @@ import './flightsurety.css';
 
 function displayFlightStatus(error, result) {
     display("display-wrapper", 'Oracles', 
-    'Trigger oracles', 
+    'Response from oracles', 
     [ { label: 'Flight Status',
         error: error,
          value: result.flight + ' ' + result.timestamp + ' : ' + result.statusCode
