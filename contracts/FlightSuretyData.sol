@@ -64,7 +64,6 @@ contract FlightSuretyData {
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
     event AirlineRegistered(address airline, bool approved);
-    event FundingReceived(address airline, uint256 funding, uint256 buyIn, bool canParticipate);
     event PolicyPurchased(bytes32 flightKey, address insuree, uint256 price);
     event PolicyPaidOut(bytes32 flightKey, address insuree, uint256 payoutAmount);
 
@@ -263,7 +262,7 @@ contract FlightSuretyData {
         if (airlines[nominee].approved) {
             numAirlines = numAirlines.add(1);
         }
-        emit AirlineRegistered(nominee, airlines[nominee].approved);
+
         return(airlines[nominee].approved, airlines[nominee].numVotes);
     }
 
@@ -377,7 +376,6 @@ contract FlightSuretyData {
             airlines[airline].canParticipate = true;
         }
 
-        emit FundingReceived(airline, airlines[airline].funding, buyInAmount, airlines[airline].canParticipate);
         return(airlines[airline].canParticipate);
     }
 

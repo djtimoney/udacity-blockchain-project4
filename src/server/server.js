@@ -1,7 +1,7 @@
 import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
 import Config from './config.json';
 import Oracles from './oracles.json';
-import Flights from './flights.json';
+import FlightInfo from './flightinfo.json';
 import Web3 from 'web3';
 import express from 'express';
 import cors from 'cors';
@@ -9,17 +9,19 @@ import cors from 'cors';
 
 
 let config = Config['localhost'];
-let web3 = new Web3(new Web3.providers.WebsocketProvider(config.url.replace('http', 'ws')));
+// let web3 = new Web3(new Web3.providers.WebsocketProvider(config.url.replace('http', 'ws')));
+let web3 = new Web3(config.url);
 web3.eth.defaultAccount = web3.eth.accounts[0];
 let flightSuretyApp = new web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
 let oracles = Oracles.oracles;
 let num_oracles = Oracles.num_oracles;
-let flights = Flights.flights;
+let flightinfo = FlightInfo.flightinfo;
 let flightsByAirline = [];
 let num_registered = 0;
 
 
 // Start listeners
+listenForPendingAirlineRegistrations();
 listenForAirlineRegistrations();
 listenForOracleRequests();
 
@@ -76,6 +78,8 @@ async function registerOracles() {
 
 // Listen for Oracle Requests
 async function listenForOracleRequests() {
+  console.log("Listening for OracleRequest");
+
   flightSuretyApp.events.OracleRequest({
     fromBlock: 0
   }, function (error, event) {
@@ -127,50 +131,34 @@ async function listenForOracleRequests() {
 }
 
 // Listen for airline registrations
-async function listenForAirlineRegistrations() {
-  console.log("Listening for AirlineRegistered events");
+async function listenForPendingAirlineRegistrations() {
+  console.log("Listening for AirlineRegistrationPending events");
 
-  flightSuretyApp.events.AirlineRegistered({
-    fromBlock: 0
+  flightSuretyApp.events.AirlineRegistrationPending({
+     fromBlock: 0
   }, function (error, event) {
     if (error) {
       console.log("Error:");
       console.log(error);
     }
-    if (result) {
+    if (event) {
       // If airline is approved, send ante
-      console.log("Got an AirlineRegistered event");
+      console.log("Got an AirlineRegistrationPending event");
       console.log(event);
-      if (result.returnValues.approved) {
-        console.log("Sending ante for airline " + result.returnValues.airline);
-        let airline = result.returnValues.airline;
+      if (event.returnValues.approved) {
+        console.log("Sending ante for airline " + event.returnValues.airline);
+        let airline = event.returnValues.airline;
 
         web3.eth.sendTransaction(
           {
-            from: result.returnValues.airline,
-            to: account(flightSuretyApp),
+            from: event.returnValues.airline,
+            to: config.appAddress,
             value: web3.utils.toWei('10', 'ether')
           }, (error, result) => {
             if (error) {
               console.log("Error sending ante : " + error);
             }
 
-            if (flightsByAirline[airline]) {
-              for (var j = 0; j < flightsByAirline[airline].length; j++) {
-                let flight_time = new Date();
-                flight_time.setSeconds(flight_time.getSeconds() + flightsByAirline[airline][j].seconds_offset);
-                flight_time.setDate(flight_time.getDate() + flightsByAirline[airline][j].days_offset);
-                let timestamp = Math.floor(flight_time.getTime() / 1000);
-
-                flightSuretyApp.methods
-                  .registerFlight(flightsByAirline[airline][j].flight, timestamp)
-                  .send({
-                    from: airline,
-                    gas: 4712388,
-                    gasPrice: 100000000000
-                  })
-              }
-            }
           }
         );
       }
@@ -180,6 +168,44 @@ async function listenForAirlineRegistrations() {
   });
 }
 
+async function listenForAirlineRegistrations() {
+  console.log("Listening for AirlineRegistered events");
+
+  flightSuretyApp.events.AirlineRegistered({
+    fromBlock: 0
+  }, function (error, event) {
+    if (error) {
+      console.log("Error on AirlineRegistered :" + error);
+    }
+
+    console.log("Got an AirlineRegistered event");
+    console.log(event);
+
+    let airline = event.returnValues.airline;
+    let canParticipate = event.returnValues.canParticipate;
+
+
+    if (canParticipate && flightsByAirline[airline]) {
+      for (var j = 0; j < flightsByAirline[airline].length; j++) {
+        let flight_time = new Date();
+        flight_time.setSeconds(flight_time.getSeconds() + flightsByAirline[airline][j].seconds_offset);
+        flight_time.setDate(flight_time.getDate() + flightsByAirline[airline][j].days_offset);
+        let timestamp = Math.floor(flight_time.getTime() / 1000);
+
+        console.log("Registering flight "+flightsByAirline[airline][j].flight+" at timestamp "+timestamp);
+        flightSuretyApp.methods
+          .registerFlight(flightsByAirline[airline][j].flight, timestamp)
+          .send({
+            from: airline,
+            gas: 4712388,
+            gasPrice: 100000000000
+          })
+      }
+    }
+  });
+}
+
+
 
 // Web Services
 const app = express();
@@ -188,6 +214,12 @@ app.use(cors({
   origin: '*'
 }));
 
+// REST interface : get flights
+app.get('/getFlights', (req, res) => {
+
+  
+
+});
 // REST interface : register airline
 app.post('/registerAirline', (req, res) => {
   let registrar = req.body.registrar;
@@ -196,9 +228,9 @@ app.post('/registerAirline', (req, res) => {
   let index = num_registered;
   num_registered += 1;
   if (!flightsByAirline[airline]) {
-    if (flights[index]) {
-      console.log("Setting flights for airline "+airline+" : "+JSON.stringify(flights[index], null, 4));
-      flightsByAirline[airline] = flights[index];
+    if (flightinfo[index]) {
+      console.log("Assigning flight info for "+flightinfo[index].airline_name+" to airline "+airline);
+      flightsByAirline[airline] = flightinfo[index].flights;
     }
   } 
 

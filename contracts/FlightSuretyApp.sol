@@ -82,7 +82,8 @@ contract FlightSuretyApp {
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
-    event AirlineRegistered(address airline, bool approved);
+    event AirlineRegistered(address airline, bool canParticipate);
+    event AirlineRegistrationPending(address airline, bool approved);
     event PolicyPurchased(bytes32 flightKey, address insuree, uint256 price);
     event PolicyPaidOut(bytes32 flightKey, address insuree, uint256 payoutAmount);
 
@@ -154,7 +155,12 @@ contract FlightSuretyApp {
                             requireAirline
                             returns(bool success, uint256 votes)
     {
-        return flightSuretyData.registerAirline(msg.sender, nominee);
+        bool approved;
+        uint256 numVotes;
+
+        (approved, numVotes) = flightSuretyData.registerAirline(msg.sender, nominee);
+        emit AirlineRegistrationPending(nominee, approved);
+        return(approved, numVotes);
     }
 
     /**
@@ -170,7 +176,9 @@ contract FlightSuretyApp {
                             payable
     {
         require(msg.value > 0, "value must be greater than zero");
-        flightSuretyData.recordAirlineFunding(msg.sender, msg.value);
+        bool canParticipate = flightSuretyData.recordAirlineFunding(msg.sender, msg.value);
+
+        emit AirlineRegistered(msg.sender, canParticipate);
     }
 
 
