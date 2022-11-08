@@ -11,13 +11,15 @@ import cors from 'cors';
 let config = Config['localhost'];
 // let web3 = new Web3(new Web3.providers.WebsocketProvider(config.url.replace('http', 'ws')));
 let web3 = new Web3(config.url);
-web3.eth.defaultAccount = web3.eth.accounts[0];
+// web3.eth.defaultAccount = web3.eth.accounts[0];
 let flightSuretyApp = new web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
 let oracles = Oracles.oracles;
 let num_oracles = Oracles.num_oracles;
 let flightinfo = FlightInfo.flightinfo;
 let flightsByAirline = [];
+let registered_flights = [];
 let num_registered = 0;
+
 
 
 // Start listeners
@@ -187,10 +189,15 @@ async function listenForAirlineRegistrations() {
 
     if (canParticipate && flightsByAirline[airline]) {
       for (var j = 0; j < flightsByAirline[airline].length; j++) {
+        let registered_flight = {};
         let flight_time = new Date();
         flight_time.setSeconds(flight_time.getSeconds() + flightsByAirline[airline][j].seconds_offset);
         flight_time.setDate(flight_time.getDate() + flightsByAirline[airline][j].days_offset);
         let timestamp = Math.floor(flight_time.getTime() / 1000);
+
+        registered_flight.flight = flightsByAirline[airline][j].flight;
+        registered_flight.timestamp = timestamp;
+        registered_flights.push(registered_flight);
 
         console.log("Registering flight "+flightsByAirline[airline][j].flight+" at timestamp "+timestamp);
         flightSuretyApp.methods
@@ -216,10 +223,20 @@ app.use(cors({
 
 // REST interface : get flights
 app.get('/getFlights', (req, res) => {
-
   
+  let flightdata = []
+  for (var i = 0 ; i < flightinfo.length ; i++) {
+    let airline_name = flightinfo[i].airline_name;
+    for (var j = 0 ; j < flightinfo[i].flights.length ; j++) {
+
+    }
+  }
+  res.send({
+    "flights": registered_flights
+  })
 
 });
+
 // REST interface : register airline
 app.post('/registerAirline', (req, res) => {
   let registrar = req.body.registrar;
@@ -255,15 +272,10 @@ app.post('/registerAirline', (req, res) => {
   res.send({
     message: "Registration sent for airline " + airline
   })
-})
+});
 
-//REST interface : register flight
-app.post('/registerFlight', (req, res) => {
-  let airline = req.body.airline;
-  let flight = req.body.flight;
-  let timestamp = req.body.timestamp;
 
-})
+
 
 export default app;
 

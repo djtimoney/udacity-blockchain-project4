@@ -32,23 +32,32 @@ import './flightsurety.css';
         });
 
         // Populate flight numbers
-        let flights = contract.getFlights();
-        for (var i = 0 ; i < flights.length ; i++) {
-            let flight_time = new Date();
-            flight_time.setTime(flights[i].timestamp * 1000);
-            let label = flights[i].flight + " "+flight_time.toString();
-            let value = {};
-            value.flight = flights[i].flight;
-            value.timestamp = flights[i].timestamp;
-
-            DOM.addOption('flight-number', label, value);
-            DOM.addOption('insure-flight-number', label, value);
-        }
+        contract.fetchFlightList(populateFlightInfo);
+        // let flights = contract.getFlights();
+        // populateFlightInfo(flights);
     
     });
     
 
 })();
+
+function populateFlightInfo(flights) {
+
+    console.log("Populating flight info: " +flights);
+ 
+
+    for (var i = 0 ; i < flights.length ; i++) {
+        let flight_time = new Date();
+        flight_time.setTime(flights[i].timestamp * 1000);
+        let label = flights[i].flight + " "+flight_time.toString();
+        let value = {};
+        value.flight = flights[i].flight;
+        value.timestamp = flights[i].timestamp;
+
+        DOM.addOption('flight-number', label, value);
+        DOM.addOption('insure-flight-number', label, value);
+    }
+}
 
 function displayFlightStatus(error, result) {
     display("display-wrapper", 'Oracles', 
