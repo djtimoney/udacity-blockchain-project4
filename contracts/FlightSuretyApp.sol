@@ -268,7 +268,7 @@ contract FlightSuretyApp {
             flights[flightKey].updatedTimestamp = now;
         }
         if (statusCode == STATUS_CODE_LATE_AIRLINE) {
-            flightSuretyData.creditInsurees(flightKey);
+            flightSuretyData.creditInsurees(airline, flight, timestamp);
         }
     }
 
@@ -412,19 +412,6 @@ contract FlightSuretyApp {
     }
 
 
-    function getFlightKey
-                        (
-                            address airline,
-                            string flight,
-                            uint256 timestamp
-                        )
-                        pure
-                        internal
-                        returns(bytes32) 
-    {
-        return keccak256(abi.encodePacked(airline, flight, timestamp));
-    }
-
     // Returns array of three non-duplicating integers from 0-9
     function generateIndexes
                             (                       
@@ -538,7 +525,9 @@ contract FlightSuretyData {
 
         function creditInsurees
                             (
-                                bytes32 flightKey
+                                address airline,
+                                string flight,
+                                uint256 timestamp
                             )
                             external;
 

@@ -1,4 +1,5 @@
 import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
+import FlightSuretyData from '../../build/contracts/FlightSuretyData.json';
 import Config from './config.json';
 import Oracles from './oracles.json';
 import FlightInfo from './flightinfo.json';
@@ -13,6 +14,7 @@ let config = Config['localhost'];
 let web3 = new Web3(config.url);
 // web3.eth.defaultAccount = web3.eth.accounts[0];
 let flightSuretyApp = new web3.eth.Contract(FlightSuretyApp.abi, config.appAddress);
+let flightSuretyData = new web3.eth.Contract(FlightSuretyData.abi, config.dataAddress); 
 let oracles = Oracles.oracles;
 let num_oracles = Oracles.num_oracles;
 let flightinfo = FlightInfo.flightinfo;
@@ -26,6 +28,10 @@ let num_registered = 0;
 listenForPendingAirlineRegistrations();
 listenForAirlineRegistrations();
 listenForOracleRequests();
+listenForPayableFlightDelayed();
+listenForPolicyPurchased();
+listenForFlightKeyGenerated();
+listenForPayouts();
 
 
 // Set up data
@@ -104,10 +110,18 @@ async function listenForOracleRequests() {
     console.log("flight:" + flight);
     console.log("timestamp:" + timestamp);
 
+    let curtime = new Date();
+    let curTimestamp = curtime.getTime() / 1000;
+
     for (var j = 0; j < num_oracles; j++) {
       if (oracles[j].indexes) {
         if (oracles[j].indexes.includes(index)) {
-          console.log("Oracle[" + j + "]: this is one of mine!");
+
+          let flightStatus = 10;
+
+          if (curTimestamp > timestamp) {
+            flightStatus = oracles[j].return_status;
+          }
 
           flightSuretyApp.methods
             .submitOracleResponse(
@@ -115,7 +129,7 @@ async function listenForOracleRequests() {
               airline,
               flight,
               timestamp,
-              oracles[j].return_status)
+              flightStatus)
             .send(
               {
                 from: oracles[j].account,
@@ -195,6 +209,7 @@ async function listenForAirlineRegistrations() {
         flight_time.setDate(flight_time.getDate() + flightsByAirline[airline][j].days_offset);
         let timestamp = Math.floor(flight_time.getTime() / 1000);
 
+        registered_flight.airline = airline;
         registered_flight.flight = flightsByAirline[airline][j].flight;
         registered_flight.timestamp = timestamp;
         registered_flights.push(registered_flight);
@@ -212,6 +227,65 @@ async function listenForAirlineRegistrations() {
   });
 }
 
+async function listenForPayouts() {
+  console.log("Listening for PolicyPaidOut events");
+
+  flightSuretyData.events.PolicyPaidOut({
+    fromBlock: 0
+  }, function (error, event) {
+    if (error) {
+      console.log("Error on PolicyPaidOut :" + error);
+    }
+
+    console.log("Got a PolicyPaidOut event");
+    console.log(event);
+  });
+}
+
+async function listenForPolicyPurchased() {
+  console.log("Listening for PolicyPurchased events");
+
+  flightSuretyData.events.PolicyPurchased({
+    fromBlock: 0
+  }, function (error, event) {
+    if (error) {
+      console.log("Error on PolicyPurchased :" + error);
+    }
+
+    console.log("Got a PolicyPurchased event");
+    console.log(event);
+  });
+}
+
+async function listenForPayableFlightDelayed() {
+  console.log("Listening for PayableFlightDelayed events");
+
+  flightSuretyData.events.PayableFlightDelayed({
+    fromBlock: 0
+  }, function (error, event) {
+    if (error) {
+      console.log("Error on PayableFlightDelayed :" + error);
+    }
+
+    console.log("Got a PayableFlightDelayed event");
+    console.log(event);
+  });
+}
+
+async function listenForFlightKeyGenerated() {
+  console.log("Listening for FlightKeyGenerated events");
+
+  flightSuretyData.events.FlightKeyGenerated({
+    fromBlock: 0
+  }, function (error, event) {
+    if (error) {
+      console.log("Error on FlightKeyGenerated :" + error);
+    }
+
+    console.log("Got a FlightKeyGenerated event");
+    console.log(event);
+  });
+}
 
 
 // Web Services
@@ -224,13 +298,6 @@ app.use(cors({
 // REST interface : get flights
 app.get('/getFlights', (req, res) => {
   
-  let flightdata = []
-  for (var i = 0 ; i < flightinfo.length ; i++) {
-    let airline_name = flightinfo[i].airline_name;
-    for (var j = 0 ; j < flightinfo[i].flights.length ; j++) {
-
-    }
-  }
   res.send({
     "flights": registered_flights
   })

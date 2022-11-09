@@ -13,28 +13,60 @@ import './flightsurety.css';
         // Read transaction
         contract.isOperational((error, result) => {
             console.log(error,result);
-            display("top-display-wrapper", 'Operational Status', 'Check if contract is operational', [ { label: 'Operational Status', error: error, value: result} ]);
+            display("display-wrapper", 'Operational Status', 'Check if contract is operational', [ { label: 'Operational Status', error: error, value: result} ]);
         }, displayFlightStatus);
     
 
         // User-submitted transaction
         DOM.elid('submit-oracle').addEventListener('click', () => {
-            let flight = DOM.getSelectedValue('flight-number');
+            let flight = DOM.getSelectedValue('flight-dropdown');
             let flight_time = new Date();
             flight_time.setTime(flight.timestamp * 1000);
             console.log("Fetch flight status for flight : "+flight.flight + ","+flight_time.toString());
             // Write transaction
-            contract.fetchFlightStatus(flight.flight, flight.timestamp, (error, result) => {
+            contract.fetchFlightStatus(flight.airline, flight.flight, flight.timestamp, (error, result) => {
                 let result_time = new Date();
                 result_time.setTime(result.timestamp * 1000);
-                display("display-wrapper", 'Oracles', 'Trigger oracles', [ { label: 'Fetch Flight Status', error: error, value: result.flight + ' ' + result_time} ]);
+                let result_timestr = result_time.toLocaleString('en-US');
+                display("display-wrapper", 'Oracles', 'Trigger oracles', [ { label: 'Fetch Flight Status', error: error, value: result.flight + ' ' + result_timestr} ]);
             });
+        });
+
+        DOM.elid('buy-insurance').addEventListener('click', () => {
+            let flight = DOM.getSelectedValue('flight-dropdown');
+
+            let passenger = DOM.getSelectedValue('passenger-dropdown');
+            contract.buyInsurance(flight.airline, flight.flight, flight.timestamp, passenger, (error, result) => {
+                let result_time = new Date();
+                result_time.setTime(result.timestamp * 1000);
+                let result_timestr = result_time.toLocaleString('en-US');
+                display("display-wrapper", 'Insurance', 'Buy insurance', [ { label: 'Buy FlightSurety Insurance', error: error, value: result.flight + ' ' + result_timestr + ' for passenger '+result.passenger} ]);
+            
+            })
+
+        });
+
+        DOM.elid('collect-payout').addEventListener('click', () => {
+
+            let passenger = DOM.getSelectedValue('passenger-dropdown');
+            contract.collectPayout(passenger, (error, result) => {
+                let result_time = new Date();
+                result_time.setTime(result.timestamp * 1000);
+                let result_timestr = result_time.toLocaleString('en-US');
+                display("display-wrapper", 'Insurance', 'Collect payout', [ { label: 'Collect payout from FlightSurety Insurance', error: error, value: 'Passenger '+result.passenger} ]);
+            
+            })
+
         });
 
         // Populate flight numbers
         contract.fetchFlightList(populateFlightInfo);
-        // let flights = contract.getFlights();
-        // populateFlightInfo(flights);
+  
+        // Populate passenger list
+        let passengers = contract.getPassengers();
+        for (var i = 0 ; i < passengers.length ; i++) {
+            DOM.addOption('passenger-dropdown', 'Passenger '+(i+1), passengers[i]);
+        }
     
     });
     
@@ -49,13 +81,13 @@ function populateFlightInfo(flights) {
     for (var i = 0 ; i < flights.length ; i++) {
         let flight_time = new Date();
         flight_time.setTime(flights[i].timestamp * 1000);
-        let label = flights[i].flight + " "+flight_time.toString();
+        let label = flights[i].flight + " ["+flight_time.toLocaleString('en-US')+"]";
         let value = {};
+        value.airline = flights[i].airline;
         value.flight = flights[i].flight;
         value.timestamp = flights[i].timestamp;
 
-        DOM.addOption('flight-number', label, value);
-        DOM.addOption('insure-flight-number', label, value);
+        DOM.addOption('flight-dropdown', label, value);
     }
 }
 

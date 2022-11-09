@@ -63,9 +63,10 @@ contract FlightSuretyData {
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
-    event AirlineRegistered(address airline, bool approved);
     event PolicyPurchased(bytes32 flightKey, address insuree, uint256 price);
     event PolicyPaidOut(bytes32 flightKey, address insuree, uint256 payoutAmount);
+    event PayableFlightDelayed(bytes32 flightKey);
+    event FlightKeyGenerated(bytes32 flightKey, address airline, string flight, uint256 timestamp);
 
     /**
     * @dev Constructor
@@ -300,6 +301,7 @@ contract FlightSuretyData {
                             requireIsOperational 
     {
         bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        emit FlightKeyGenerated(flightKey, airline, flight, timestamp);
         policies[flightKey].push(
             Policy(
                 {
@@ -316,11 +318,16 @@ contract FlightSuretyData {
     */
     function creditInsurees
                                 (
-                                    bytes32 flightKey
+                                    address airline,
+                                    string flight,
+                                    uint256 timestamp
                                 )
                                 external
                                 requireIsOperational
     {
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        emit FlightKeyGenerated(flightKey, airline, flight, timestamp);
+        emit PayableFlightDelayed(flightKey);
         uint numPolicies = policies[flightKey].length;
         for (uint i = 0 ; i < numPolicies ; i++) {
             // Credit insuree 1.5 times price they paid.  Since we are using integers, multiply by

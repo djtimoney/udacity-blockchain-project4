@@ -1,7 +1,6 @@
 import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
 import Config from './config.json';
 import Web3 from 'web3';
-// import Flights from './flights.json';
 
 export default class Contract {
     constructor(network, flightStatusCallback, callback) {
@@ -14,7 +13,6 @@ export default class Contract {
         this.owner = null;
         this.airlines = [];
         this.passengers = [];
-        // this.flights = Flights.flights;
         this.num_registered = 0;
         this.flight_labels = [];
         this.flightStatusCallback = flightStatusCallback;
@@ -37,26 +35,6 @@ export default class Contract {
                 this.passengers.push(accts[counter++]);
             }
 
-            // Populate dynamic flight info:
-            //  * timestamp, relative to current time
-            //  * airline account
-            //  * index within array
-            //  * insured flag, indicating whether insurance has been purchased
-
-
-            // console.log("Initializing flight info");
-            console.log("Account owner is :"+this.owner);
-
-            // for (var i = 0 ; i < this.flights.length ; i++) {
-            //     let flight_time = new Date();
-            //     flight_time.setSeconds(flight_time.getSeconds() + this.flights[i].seconds_offset);
-            //     flight_time.setDate(flight_time.getDate() + this.flights[i].days_offset);
-            //     this.flights[i].timestamp = Math.floor(flight_time.getTime() / 1000);
-            //     this.flights[i].index = i;
-            //     this.flights[i].insured = false;
-            //     this.flights[i].airline = this.airlines[this.flights[i].airline_index];
-            // }
-
             // Register airlines
             console.log("Registering airlines");
             this.registerAirlines();
@@ -70,12 +48,9 @@ export default class Contract {
         });
     }
 
-    // Get list of flights
-    // getFlights() {
-    //     let retval = this.flights;
-
-    //     return retval;
-    // }
+    getPassengers() {
+        return this.passengers;
+    }
 
 
     isOperational(callback) {
@@ -85,10 +60,10 @@ export default class Contract {
             .call({ from: self.owner}, callback);
     }
 
-    fetchFlightStatus(flight, timestamp, callback) {
+    fetchFlightStatus(airline, flight, timestamp, callback) {
         let self = this;
         let payload = {
-            airline: self.airlines[0],
+            airline: airline,
             flight: flight,
             timestamp: timestamp
         } 
@@ -96,6 +71,42 @@ export default class Contract {
             .fetchFlightStatus(payload.airline, payload.flight, payload.timestamp)
             .send({ from: self.owner}, (error, result) => {
                 callback(error, payload);
+            });
+    }
+
+    buyInsurance(airline, flight, timestamp, passenger, callback) {
+        let self = this;
+        let payload = {
+            airline: airline,
+            flight: flight,
+            timestamp: timestamp,
+            passenger: passenger
+        }
+        self.flightSuretyApp.methods
+            .buy(airline, flight, timestamp)
+            .send({ 
+                from: passenger,
+                value: this.web3.utils.toWei('1', 'ether'),
+                gas: 4712388,
+                gasPrice: 100000000000
+            }, (error, result) => {
+                callback(error, payload)
+            });
+    }
+
+    collectPayout(passenger, callback) {
+        let self = this;
+        let payload = {
+            passenger: passenger
+        }
+        self.flightSuretyApp.methods
+            .pay()
+            .send({ 
+                from: passenger,
+                gas: 4712388,
+                gasPrice: 100000000000
+            }, (error, result) => {
+                callback(error, payload)
             });
     }
 
