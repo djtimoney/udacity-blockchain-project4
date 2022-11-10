@@ -8,16 +8,30 @@ import './flightsurety.css';
 
     let result = null;
 
-    let contract = new Contract('localhost', displayFlightStatus,  () => {
+    let contract = new Contract('localhost', displayFlightStatus, populateFlightInfo, () => {
 
         // Read transaction
         contract.isOperational((error, result) => {
             console.log(error,result);
+            DOM.setLabel("oper-status", result);
             display("display-wrapper", 'Operational Status', 'Check if contract is operational', [ { label: 'Operational Status', error: error, value: result} ]);
         }, displayFlightStatus);
     
 
         // User-submitted transaction
+        DOM.elid('toggle-oper-status').addEventListener('click', () => {
+            let operStatus = DOM.getLabel('oper-status');
+            let toggleStatus = true;
+            if (operStatus == 'true') {
+                toggleStatus = false;
+            }
+            contract.toggleOperStatus(operStatus, (error, result) => {
+                DOM.setLabel("oper-status", result);
+                display("display-wrapper", 'Operational Status', 'Toggle operational status', [ { label: 'Operational Status', error: error, value: result} ]);
+
+            });
+        });
+
         DOM.elid('submit-oracle').addEventListener('click', () => {
             let flight = DOM.getSelectedValue('flight-dropdown');
             let flight_time = new Date();
@@ -60,7 +74,7 @@ import './flightsurety.css';
         });
 
         // Populate flight numbers
-        contract.fetchFlightList(populateFlightInfo);
+        // contract.fetchFlightList(populateFlightInfo);
   
         // Populate passenger list
         let passengers = contract.getPassengers();
@@ -73,22 +87,20 @@ import './flightsurety.css';
 
 })();
 
-function populateFlightInfo(flights) {
+function populateFlightInfo(flight) {
 
-    console.log("Populating flight info: " +flights);
+    console.log("Populating flight info: " +flight);
  
 
-    for (var i = 0 ; i < flights.length ; i++) {
         let flight_time = new Date();
-        flight_time.setTime(flights[i].timestamp * 1000);
-        let label = flights[i].flight + " ["+flight_time.toLocaleString('en-US')+"]";
+        flight_time.setTime(flight.timestamp * 1000);
+        let label = flight.flight + " ["+flight_time.toLocaleString('en-US')+"]";
         let value = {};
-        value.airline = flights[i].airline;
-        value.flight = flights[i].flight;
-        value.timestamp = flights[i].timestamp;
+        value.airline = flight.airline;
+        value.flight = flight.flight;
+        value.timestamp = flight.timestamp;
 
         DOM.addOption('flight-dropdown', label, value);
-    }
 }
 
 function displayFlightStatus(error, result) {

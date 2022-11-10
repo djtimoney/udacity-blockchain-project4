@@ -103,5 +103,15 @@ export default class DOM {
       console.log("Selected value:" + JSON.stringify(retval));
       return retval;
     }
+
+    static setLabel(id, text) {
+      const label = DOM.elid(id);
+      label.innerHTML = text;
+    }
+
+    static getLabel(id) {
+      const label = DOM.elid(id);
+      return label.innerHTML;
+    }
   }
     

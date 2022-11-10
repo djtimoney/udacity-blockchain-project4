@@ -79,6 +79,27 @@ body {
     grid-column-end: 4;
 }
 
+.grid-item4-1 {
+    grid-row-start: 4;
+    grid-row-end: 5;
+    grid-column-start: 1;
+    grid-column-end: 2;
+}
+
+.grid-item4-2 {
+    grid-row-start: 4;
+    grid-row-end: 5;
+    grid-column-start: 2;
+    grid-column-end: 3;
+}
+
+.grid-item4-3 {
+    grid-row-start: 4;
+    grid-row-end: 5;
+    grid-column-start: 3;
+    grid-column-end: 4;
+}
+
 .top-20 {
     margin-top: 20px;
 }
